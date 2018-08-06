@@ -27,6 +27,7 @@ Shader "arktoon/Fade" {
         _ShadowPlanBValueFromBase ("[Plan B] Value From Base", Range(0, 2)) = 0
         [MaterialToggle] _ShadowPlanBUseCustomShadowTexture ("[Plan B] Use Custom Shadow Texture", Float ) = 0
         _ShadowPlanBCustomShadowTexture ("[Plan B] Custom Shadow Texture", 2D) = "black" {}
+        _ShadowPlanBCustomShadowTextureRGB ("[Plan B] Custom Shadow Texture RGB", Color) = (1,1,1,1)
         // Gloss
         [Toggle(USE_GLOSS)]_UseGloss ("Enabled", Float) = 0
         _GlossBlend ("Blend", Range(0, 1)) = 0
@@ -153,6 +154,7 @@ return float3(0, 0.3823529, 0.01845836);
             uniform sampler2D _RimTexture; uniform float4 _RimTexture_ST;
             uniform fixed _ShadowPlanBUseCustomShadowTexture;
             uniform sampler2D _ShadowPlanBCustomShadowTexture; uniform float4 _ShadowPlanBCustomShadowTexture_ST;
+            uniform float4 _ShadowPlanBCustomShadowTextureRGB;
             uniform float4 _MatcapColor;
             uniform samplerCUBE _ReflectionCubemap;
             uniform float _ReflectionCubemapMix;
@@ -246,12 +248,13 @@ return float3(0, 0.3823529, 0.01845836);
                 float3 node_5443 = float3(abs(node_5443_q.z + (node_5443_q.w - node_5443_q.y) / (6.0 * node_5443_d + node_5443_e)), node_5443_d / (node_5443_q.x + node_5443_e), node_5443_q.x);;
                 float3 Diff_HSV = (lerp(float3(1,1,1),saturate(3.0*abs(1.0-2.0*frac((_ShadowPlanBHueShiftFromBase+node_5443.r)+float3(0.0,-1.0/3.0,1.0/3.0)))-1),(node_5443.g*_ShadowPlanBSaturationFromBase))*(_ShadowPlanBValueFromBase*node_5443.b));
                 float4 _ShadowPlanBCustomShadowTexture_var = tex2D(_ShadowPlanBCustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanBCustomShadowTexture));
+                float3 shadowCustomTexture = _ShadowPlanBCustomShadowTexture_var.rgb * _ShadowPlanBCustomShadowTextureRGB.rgb;
 
                 #ifdef USE_SHADE_TEXTURE
                     #ifdef USE_SHADOW_MIX
-                        float3 ShadeMap = lerp( Diff_HSV*finalLight, _ShadowPlanBCustomShadowTexture_var.rgb*finalLight, _ShadowPlanBUseCustomShadowTexture );
+                        float3 ShadeMap = lerp( Diff_HSV*finalLight, shadowCustomTexture*finalLight, _ShadowPlanBUseCustomShadowTexture );
                     #else
-                        float3 ShadeMap = lerp( Diff_HSV*directLighting, _ShadowPlanBCustomShadowTexture_var.rgb*directLighting, _ShadowPlanBUseCustomShadowTexture );
+                        float3 ShadeMap = lerp( Diff_HSV*directLighting, shadowCustomTexture*directLighting, _ShadowPlanBUseCustomShadowTexture );
                     #endif
                     float3 ToonedMap = (lerp(ShadeMap,Diffuse*finalLight,finalLight)/1.0);
                 #else

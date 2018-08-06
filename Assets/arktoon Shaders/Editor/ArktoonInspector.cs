@@ -25,6 +25,7 @@ namespace ArktoonShaders
         MaterialProperty ShadowPlanBValueFromBase;
         MaterialProperty ShadowPlanBUseCustomShadowTexture;
         MaterialProperty ShadowPlanBCustomShadowTexture;
+        MaterialProperty ShadowPlanBCustomShadowTextureRGB;
         MaterialProperty UseGloss;
         MaterialProperty GlossBlend;
         MaterialProperty GlossPower;
@@ -87,6 +88,7 @@ namespace ArktoonShaders
             ShadowPlanBValueFromBase = FindProperty("_ShadowPlanBValueFromBase", props);
             ShadowPlanBUseCustomShadowTexture = FindProperty("_ShadowPlanBUseCustomShadowTexture", props);
             ShadowPlanBCustomShadowTexture = FindProperty("_ShadowPlanBCustomShadowTexture", props);
+            ShadowPlanBCustomShadowTextureRGB = FindProperty("_ShadowPlanBCustomShadowTextureRGB", props);
             UseGloss = FindProperty("_UseGloss", props);
             GlossBlend = FindProperty("_GlossBlend", props);
             GlossPower = FindProperty("_GlossPower", props);
@@ -160,6 +162,7 @@ namespace ArktoonShaders
                         materialEditor.ShaderProperty(ShadowPlanBValueFromBase, "Value");
                         materialEditor.ShaderProperty(ShadowPlanBUseCustomShadowTexture, "Use Shade Texture");
                         materialEditor.ShaderProperty(ShadowPlanBCustomShadowTexture, "Shade Texture");
+                        materialEditor.ShaderProperty(ShadowPlanBCustomShadowTextureRGB, "Shade Texture RGB");
                         EditorGUI.indentLevel --;
                     }
                     EditorGUI.indentLevel --;
