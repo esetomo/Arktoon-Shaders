@@ -19,6 +19,7 @@ namespace ArktoonShaders
         MaterialProperty ShadowStrength;
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
+        MaterialProperty ShadowPlanBUseShadowMix;
         MaterialProperty ShadowPlanBHueShiftFromBase;
         MaterialProperty ShadowPlanBSaturationFromBase;
         MaterialProperty ShadowPlanBValueFromBase;
@@ -80,6 +81,7 @@ namespace ArktoonShaders
             ShadowBoarderMax = FindProperty("_ShadowBoarderMax", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
+            ShadowPlanBUseShadowMix = FindProperty("_ShadowPlanBUseShadowMix", props);
             ShadowPlanBHueShiftFromBase = FindProperty("_ShadowPlanBHueShiftFromBase", props);
             ShadowPlanBSaturationFromBase = FindProperty("_ShadowPlanBSaturationFromBase", props);
             ShadowPlanBValueFromBase = FindProperty("_ShadowPlanBValueFromBase", props);
@@ -152,6 +154,7 @@ namespace ArktoonShaders
                     if(usePlanB > 0)
                     {
                         EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(ShadowPlanBUseShadowMix, "Mix Default Shadow");
                         materialEditor.ShaderProperty(ShadowPlanBHueShiftFromBase, "Hue Shift");
                         materialEditor.ShaderProperty(ShadowPlanBSaturationFromBase, "Saturation");
                         materialEditor.ShaderProperty(ShadowPlanBValueFromBase, "Value");
