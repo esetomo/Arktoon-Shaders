@@ -24,7 +24,7 @@ This is full-opened. You can uncheck `Use` checkbox to hide useless options for 
 This repository is under MIT License. see LICENSE.  
 本リポジトリはMIT Licenseを使用して提供されています。
 
-## (Japanese) MIT Licenseについて雑な解説 
+### (Japanese) こういうこと
  - Arktoon-Shadersに記載済みのライセンス適用宣言、およびLICENSEファイルの改変はできません。
  - Arktoon-Shadersを使って発生した面倒ごとに対応する義務は、リポジトリ管理者のsynqarkにありません。
  - 上記2項目が遵守されている限り、Arktoon-Shadersを使って作成した成果物は、ソースコードが提供されるどうかに関わらず、公開・改造・販売・再配布などが無条件で可能であり、またそれに伴うArktoon-Shaderに関する追加の手続きはありません。
