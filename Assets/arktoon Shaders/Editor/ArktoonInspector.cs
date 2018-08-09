@@ -25,6 +25,7 @@ namespace ArktoonShaders
         MaterialProperty ShadowBoarderMin;
         MaterialProperty ShadowBoarderMax;
         MaterialProperty ShadowStrength;
+        MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
         MaterialProperty ShadowPlanBUseShadowMix;
@@ -89,6 +90,7 @@ namespace ArktoonShaders
             ShadowBoarderMin = FindProperty("_ShadowBoarderMin", props);
             ShadowBoarderMax = FindProperty("_ShadowBoarderMax", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
+            ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
             ShadowPlanBUseShadowMix = FindProperty("_ShadowPlanBUseShadowMix", props);
             ShadowPlanBHueShiftFromBase = FindProperty("_ShadowPlanBHueShiftFromBase", props);
@@ -159,6 +161,7 @@ namespace ArktoonShaders
                     materialEditor.ShaderProperty(ShadowBoarderMin, "Shadow Boarder End");
                     materialEditor.ShaderProperty(ShadowBoarderMax, "Shadow Boarder Begin");
                     materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
+                    materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength");
                     materialEditor.ShaderProperty(ShadowPlanBUsePlanB, "Use Custom Shade");
                     var usePlanB = ShadowPlanBUsePlanB.floatValue;
                     if(usePlanB > 0)

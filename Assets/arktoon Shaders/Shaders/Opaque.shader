@@ -18,6 +18,7 @@ Shader "arktoon/Opaque" {
         _ShadowBoarderMin ("Boarder Min", Range(0, 1)) = 0.499
         _ShadowBoarderMax ("Boarder Max", Range(0, 1)) = 0.55
         _ShadowStrength ("Strength", Range(0, 1)) = 0.5
+        _ShadowStrengthMask ("Strength Mask", 2D) = "white" {}
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         [Toggle(USE_SHADOW_MIX)]_ShadowPlanBUseShadowMix ("[Plan B] Use Shadow Mix", Float ) = 0
@@ -123,6 +124,7 @@ return float3(0, 0.3823529, 0.01845836);
             uniform float _ShadowBoarderMin;
             uniform float _ShadowBoarderMax;
             uniform float _ShadowStrength;
+            uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
             uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
             uniform float4 _EmissionColor;
@@ -238,7 +240,8 @@ return float3(0, 0.3823529, 0.01845836);
                 float lightDifference = ((topIndirectLighting+grayscalelightcolor)-bottomIndirectLighting);
                 float remappedLight = ((grayscaleDirectLighting-bottomIndirectLighting)/lightDifference);
                 float node_4614 = 0.0;
-                float directContribution = (1.0 - ((1.0 - saturate((node_4614 + ( (saturate(remappedLight) - _ShadowBoarderMin) * (1.0 - node_4614) ) / (_ShadowBoarderMax - _ShadowBoarderMin))))*_ShadowStrength));
+                float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
+                float directContribution = (1.0 - ((1.0 - saturate((node_4614 + ( (saturate(remappedLight) - _ShadowBoarderMin) * (1.0 - node_4614) ) / (_ShadowBoarderMax - _ShadowBoarderMin)))) * _ShadowStrengthMask_var * _ShadowStrength));
                 float3 finalLight = lerp(indirectLighting,directLighting,directContribution);
                 float3 node_1346 = Diffuse;
                 float4 node_5443_k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -340,6 +343,7 @@ return float3(0, 0.3823529, 0.01845836);
             uniform float _ShadowBoarderMin;
             uniform float _ShadowBoarderMax;
             uniform float _ShadowStrength;
+            uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
             uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
             uniform float4 _EmissionColor;
@@ -409,7 +413,9 @@ return float3(0, 0.3823529, 0.01845836);
 
 				float lightContribution = dot(normalize(_WorldSpaceLightPos0.xyz - i.posWorld.xyz),normalDirection)*attenuation;
                 float3 directContribution = (1.0 - (1.0 - saturate(((saturate(lightContribution) - _ShadowBoarderMin) / (_ShadowBoarderMax - _ShadowBoarderMin)))));
-                float3 finalLight = saturate(directContribution + ((1 - _ShadowStrength) * attenuation));
+
+                float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
+                float3 finalLight = saturate(directContribution + ((1 - (_ShadowStrength * _ShadowStrengthMask_var)) * attenuation));
                 float3 ToonedMap = Diffuse * lerp(0, _LightColor0.rgb, finalLight);
                 #ifdef USE_GLOSS
                     float3 Gloss = ((max(0,dot(lightDirection,normalDirection))*pow(max(0,dot(normalDirection,halfDirection)),exp2(lerp(1,11,_GlossPower)))*_GlossColor.rgb)*_LightColor0.rgb*attenuation*_GlossBlend);
