@@ -4,6 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
+// Arktoon-Shaders
+//
+// Copyright (c) 2018 synqark
+//
+// This code and repos（https://github.com/synqark/Arktoon-Shader) is under MIT licence, see LICENSE
+//
+// 本コードおよびリポジトリ（https://github.com/synqark/Arktoon-Shader) は MIT License を使用して公開しています。
+// 詳細はLICENSEか、https://opensource.org/licenses/mit-license.php を参照してください。
 namespace ArktoonShaders
 {
     public class ArktoonInspector : ShaderGUI
