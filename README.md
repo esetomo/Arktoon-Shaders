@@ -16,9 +16,16 @@ Here : https://github.com/synqark/Arktoon-Shaders/releases
    - Reflection (Scene ReflectionProbe or other Cubemap texture.)
    - Rim (additive color/texture)
    - Shade Cap ( Darker version of MatCap. can use for shading!)
+   
 # Inspector Window
-This is full-opened. You can uncheck `Use` checkbox to hide useless options for you.
-![image](https://pbs.twimg.com/media/DjyzsgDV4AAJMKG.jpg)
+
+### Default
+This is default settings, You can use Toon such simple options.
+![image](https://raw.githubusercontent.com/synqark/Arktoon-Shaders/master/Media/default_inspector.png)
+
+### Expanded
+...and You can also customize all these properties.
+![image](https://raw.githubusercontent.com/synqark/Arktoon-Shaders/master/Media/expanded_inspector.png)
 
 # License
 This repository is under MIT License. see LICENSE.  
