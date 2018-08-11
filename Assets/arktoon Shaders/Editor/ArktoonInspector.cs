@@ -54,6 +54,7 @@ namespace ArktoonShaders
         MaterialProperty UseReflection;
         MaterialProperty ReflectionReflectionPower;
         MaterialProperty ReflectionReflectionMask;
+        MaterialProperty ReflectionNormalMix;
         MaterialProperty ReflectionCubemap;
         MaterialProperty ReflectionRoughness;
         MaterialProperty UseRim;
@@ -121,6 +122,7 @@ namespace ArktoonShaders
             UseReflection = FindProperty("_UseReflection", props);
             ReflectionReflectionPower = FindProperty("_ReflectionReflectionPower", props);
             ReflectionReflectionMask = FindProperty("_ReflectionReflectionMask", props);
+            ReflectionNormalMix = FindProperty("_ReflectionNormalMix", props);
             ReflectionCubemap = FindProperty("_ReflectionCubemap", props);
             ReflectionRoughness = FindProperty("_ReflectionRoughness", props);
             UseRim = FindProperty("_UseRim", props);
@@ -256,6 +258,7 @@ namespace ArktoonShaders
                         materialEditor.ShaderProperty(ReflectionReflectionPower,"Blend");
                         materialEditor.ShaderProperty(ReflectionReflectionMask,"Blend Mask");
                         materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap");
+                        materialEditor.ShaderProperty(ReflectionNormalMix,"Normal Map mix");
                         materialEditor.ShaderProperty(ReflectionRoughness,"Roughness");
                     }
                     EditorGUI.indentLevel--;
