@@ -29,14 +29,15 @@ namespace ArktoonShaders
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
         MaterialProperty ShadowPlanBUseShadowMix;
+        MaterialProperty ShadowPlanBUseCustomShadowTexture;
         MaterialProperty ShadowPlanBHueShiftFromBase;
         MaterialProperty ShadowPlanBSaturationFromBase;
         MaterialProperty ShadowPlanBValueFromBase;
-        MaterialProperty ShadowPlanBUseCustomShadowTexture;
         MaterialProperty ShadowPlanBCustomShadowTexture;
         MaterialProperty ShadowPlanBCustomShadowTextureRGB;
         MaterialProperty UseGloss;
         MaterialProperty GlossBlend;
+        MaterialProperty GlossBlendMask;
         MaterialProperty GlossPower;
         MaterialProperty GlossColor;
         MaterialProperty UseOutline;
@@ -45,26 +46,28 @@ namespace ArktoonShaders
         MaterialProperty OutlineColor;
         MaterialProperty OutlineTextureColorRate;
         MaterialProperty UseMatcap;
-        MaterialProperty MatcapBoost;
+        MaterialProperty MatcapBlend;
         MaterialProperty MatcapTexture;
         MaterialProperty MatcapColor;
-        MaterialProperty MatcapMask;
+        MaterialProperty MatcapBlendMask;
+        MaterialProperty MatcapNormalMix;
         MaterialProperty UseReflection;
         MaterialProperty ReflectionReflectionPower;
         MaterialProperty ReflectionReflectionMask;
         MaterialProperty ReflectionCubemap;
-        MaterialProperty ReflectionCubemapMix;
         MaterialProperty ReflectionRoughness;
-        MaterialProperty ReflectionRoughnessmap;
         MaterialProperty UseRim;
         MaterialProperty RimBlend;
+        MaterialProperty RimBlendMask;
         MaterialProperty RimFresnelPower;
         MaterialProperty RimColor;
         MaterialProperty RimTexture;
         MaterialProperty RimUseBaseTexture;
         MaterialProperty UseShadowCap;
+        MaterialProperty ShadowCapBlend;
+        MaterialProperty ShadowCapBlendMask;
+        MaterialProperty ShadowCapNormalMix;
         MaterialProperty ShadowCapTexture;
-        MaterialProperty ShadowCapMask;
         MaterialProperty ShadowCapColor;
         MaterialProperty Cull;
         MaterialProperty ZWrite;
@@ -93,14 +96,15 @@ namespace ArktoonShaders
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
             ShadowPlanBUseShadowMix = FindProperty("_ShadowPlanBUseShadowMix", props);
+            ShadowPlanBUseCustomShadowTexture = FindProperty("_ShadowPlanBUseCustomShadowTexture", props);
             ShadowPlanBHueShiftFromBase = FindProperty("_ShadowPlanBHueShiftFromBase", props);
             ShadowPlanBSaturationFromBase = FindProperty("_ShadowPlanBSaturationFromBase", props);
             ShadowPlanBValueFromBase = FindProperty("_ShadowPlanBValueFromBase", props);
-            ShadowPlanBUseCustomShadowTexture = FindProperty("_ShadowPlanBUseCustomShadowTexture", props);
             ShadowPlanBCustomShadowTexture = FindProperty("_ShadowPlanBCustomShadowTexture", props);
             ShadowPlanBCustomShadowTextureRGB = FindProperty("_ShadowPlanBCustomShadowTextureRGB", props);
             UseGloss = FindProperty("_UseGloss", props);
             GlossBlend = FindProperty("_GlossBlend", props);
+            GlossBlendMask = FindProperty("_GlossBlendMask", props);
             GlossPower = FindProperty("_GlossPower", props);
             GlossColor = FindProperty("_GlossColor", props);
             if(isOpaque || isCutout) UseOutline = FindProperty("_UseOutline", props);
@@ -109,26 +113,28 @@ namespace ArktoonShaders
             if(isOpaque || isCutout) OutlineColor = FindProperty("_OutlineColor", props);
             if(isOpaque || isCutout) OutlineTextureColorRate = FindProperty("_OutlineTextureColorRate", props);
             UseMatcap = FindProperty("_UseMatcap", props);
-            MatcapBoost = FindProperty("_MatcapBoost", props);
+            MatcapBlend = FindProperty("_MatcapBlend", props);
             MatcapTexture = FindProperty("_MatcapTexture", props);
             MatcapColor = FindProperty("_MatcapColor", props);
-            MatcapMask = FindProperty("_MatcapMask", props);
+            MatcapBlendMask = FindProperty("_MatcapBlendMask", props);
+            MatcapNormalMix = FindProperty("_MatcapNormalMix", props);
             UseReflection = FindProperty("_UseReflection", props);
             ReflectionReflectionPower = FindProperty("_ReflectionReflectionPower", props);
             ReflectionReflectionMask = FindProperty("_ReflectionReflectionMask", props);
             ReflectionCubemap = FindProperty("_ReflectionCubemap", props);
-            ReflectionCubemapMix = FindProperty("_ReflectionCubemapMix", props);
             ReflectionRoughness = FindProperty("_ReflectionRoughness", props);
-            ReflectionRoughnessmap = FindProperty("_ReflectionRoughnessmap", props);
             UseRim = FindProperty("_UseRim", props);
             RimBlend = FindProperty("_RimBlend", props);
+            RimBlendMask = FindProperty("_RimBlendMask", props);
             RimFresnelPower = FindProperty("_RimFresnelPower", props);
             RimColor = FindProperty("_RimColor", props);
             RimTexture = FindProperty("_RimTexture", props);
             RimUseBaseTexture = FindProperty("_RimUseBaseTexture", props);
             UseShadowCap = FindProperty("_UseShadowCap", props);
+            ShadowCapBlend = FindProperty("_ShadowCapBlend", props);
+            ShadowCapBlendMask = FindProperty("_ShadowCapBlendMask", props);
+            ShadowCapNormalMix = FindProperty("_ShadowCapNormalMix", props);
             ShadowCapTexture = FindProperty("_ShadowCapTexture", props);
-            ShadowCapMask = FindProperty("_ShadowCapMask", props);
             ShadowCapColor = FindProperty("_ShadowCapColor", props);
             Cull = FindProperty("_Cull", props);
             if(isFade) ZWrite = FindProperty("_ZWrite", props);
@@ -147,6 +153,7 @@ namespace ArktoonShaders
                 }
 
                 if(isCutout){
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                     EditorGUILayout.LabelField("Alpha Cutout", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
@@ -155,30 +162,39 @@ namespace ArktoonShaders
                     }
                 }
 
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Shadow", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
                     materialEditor.ShaderProperty(ShadowBoarderMin, "Shadow Boarder End");
                     materialEditor.ShaderProperty(ShadowBoarderMax, "Shadow Boarder Begin");
                     materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
-                    materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength");
+                    materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength Mask");
                     materialEditor.ShaderProperty(ShadowPlanBUsePlanB, "Use Custom Shade");
                     var usePlanB = ShadowPlanBUsePlanB.floatValue;
                     if(usePlanB > 0)
                     {
                         EditorGUI.indentLevel ++;
                         materialEditor.ShaderProperty(ShadowPlanBUseShadowMix, "Mix Default Shadow");
-                        materialEditor.ShaderProperty(ShadowPlanBHueShiftFromBase, "Hue Shift");
-                        materialEditor.ShaderProperty(ShadowPlanBSaturationFromBase, "Saturation");
-                        materialEditor.ShaderProperty(ShadowPlanBValueFromBase, "Value");
                         materialEditor.ShaderProperty(ShadowPlanBUseCustomShadowTexture, "Use Shade Texture");
-                        materialEditor.ShaderProperty(ShadowPlanBCustomShadowTexture, "Shade Texture");
-                        materialEditor.ShaderProperty(ShadowPlanBCustomShadowTextureRGB, "Shade Texture RGB");
+                        var useShadeTexture = ShadowPlanBUseCustomShadowTexture.floatValue;
+                        if(useShadeTexture > 0)
+                        {
+                            materialEditor.ShaderProperty(ShadowPlanBCustomShadowTexture, "Shade Texture");
+                            materialEditor.ShaderProperty(ShadowPlanBCustomShadowTextureRGB, "Shade Texture RGB");
+                        }
+                        else
+                        {
+                            materialEditor.ShaderProperty(ShadowPlanBHueShiftFromBase, "Hue Shift");
+                            materialEditor.ShaderProperty(ShadowPlanBSaturationFromBase, "Saturation");
+                            materialEditor.ShaderProperty(ShadowPlanBValueFromBase, "Value");
+                        }
                         EditorGUI.indentLevel --;
                     }
                     EditorGUI.indentLevel --;
                 }
 
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Gloss", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
@@ -187,6 +203,7 @@ namespace ArktoonShaders
                     if(useGloss > 0)
                     {
                         materialEditor.ShaderProperty(GlossBlend, "Blend");
+                        materialEditor.ShaderProperty(GlossBlendMask, "Blend Mask");
                         materialEditor.ShaderProperty(GlossPower, "Power");
                         materialEditor.ShaderProperty(GlossColor, "Color");
                     }
@@ -194,6 +211,7 @@ namespace ArktoonShaders
                 }
 
                 if(isOpaque || isCutout)  {
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                     EditorGUILayout.LabelField("Outline", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel++;
@@ -202,7 +220,7 @@ namespace ArktoonShaders
                         if(useOutline > 0)
                         {
                             materialEditor.ShaderProperty(OutlineWidth,"Width");
-                            materialEditor.ShaderProperty(OutlineWidthMask,"WidthMask");
+                            materialEditor.ShaderProperty(OutlineWidthMask,"Width Mask");
                             materialEditor.ShaderProperty(OutlineColor,"Color");
                             materialEditor.ShaderProperty(OutlineTextureColorRate,"Base Color Mix");
                         }
@@ -210,6 +228,7 @@ namespace ArktoonShaders
                     }
                 }
 
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("MatCap", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel++;
@@ -217,13 +236,16 @@ namespace ArktoonShaders
                     var useMatcap = UseMatcap.floatValue;
                     if(useMatcap > 0)
                     {
-                        materialEditor.ShaderProperty(MatcapBoost,"Blend");
+                        materialEditor.ShaderProperty(MatcapBlend,"Blend");
+                        materialEditor.ShaderProperty(MatcapBlendMask,"Blend Mask");
+                        materialEditor.ShaderProperty(MatcapNormalMix, "Normal Map mix");
                         materialEditor.ShaderProperty(MatcapTexture,"Texture");
                         materialEditor.ShaderProperty(MatcapColor,"Color");
-                        materialEditor.ShaderProperty(MatcapMask,"Mask");
                     }
                     EditorGUI.indentLevel--;
                 }
+
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Reflection", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel++;
@@ -232,14 +254,14 @@ namespace ArktoonShaders
                     if(useReflection > 0)
                     {
                         materialEditor.ShaderProperty(ReflectionReflectionPower,"Blend");
-                        materialEditor.ShaderProperty(ReflectionReflectionMask,"Mask");
+                        materialEditor.ShaderProperty(ReflectionReflectionMask,"Blend Mask");
                         materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap");
-                        materialEditor.ShaderProperty(ReflectionCubemapMix,"Cubemap Mix");
                         materialEditor.ShaderProperty(ReflectionRoughness,"Roughness");
-                        materialEditor.ShaderProperty(ReflectionRoughnessmap,"Roughness Map");
                     }
                     EditorGUI.indentLevel--;
                 }
+
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Rim", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel++;
@@ -248,6 +270,7 @@ namespace ArktoonShaders
                     if(useRim > 0)
                     {
                         materialEditor.ShaderProperty(RimBlend,"Blend");
+                        materialEditor.ShaderProperty(RimBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(RimFresnelPower,"Fresnel Power");
                         materialEditor.ShaderProperty(RimUseBaseTexture,"Use Base Color");
                         materialEditor.ShaderProperty(RimColor,"Color");
@@ -255,6 +278,8 @@ namespace ArktoonShaders
                     }
                     EditorGUI.indentLevel--;
                 }
+
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Shade Cap", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel++;
@@ -262,13 +287,16 @@ namespace ArktoonShaders
                     var useShadowCap = UseShadowCap.floatValue;
                     if(useShadowCap > 0)
                     {
+                        materialEditor.ShaderProperty(ShadowCapBlend,"Blend");
+                        materialEditor.ShaderProperty(ShadowCapBlendMask,"Blend Mask");
+                        materialEditor.ShaderProperty(ShadowCapNormalMix,"Normal Map mix");
                         materialEditor.ShaderProperty(ShadowCapTexture,"Texture");
-                        materialEditor.ShaderProperty(ShadowCapMask,"Mask");
                         materialEditor.ShaderProperty(ShadowCapColor,"Color");
                     }
                     EditorGUI.indentLevel--;
                 }
 
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
