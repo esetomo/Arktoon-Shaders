@@ -30,7 +30,7 @@ Shader "arktoon/Opaque" {
         _ShadowPlanBCustomShadowTextureRGB ("[Plan B] Custom Shadow Texture RGB", Color) = (1,1,1,1)
         // Gloss
         [Toggle(USE_GLOSS)]_UseGloss ("[Gloss] Enabled", Float) = 0
-        _GlossBlend ("[Gloss] Blend", Range(0, 1)) = 0
+        _GlossBlend ("[Gloss] Blend", Range(0, 1)) = 1
         _GlossBlendMask ("[Gloss] Blend Mask", 2D) = "white" {}
         _GlossPower ("[Gloss] Power", Range(0, 1)) = 0.5
         _GlossColor ("[Gloss] Color", Color) = (1,1,1,1)
@@ -49,14 +49,14 @@ Shader "arktoon/Opaque" {
         _MatcapColor ("[MatCap] Color", Color) = (1,1,1,1)
         // Reflection
         [Toggle(USE_REFLECTION)]_UseReflection ("[Reflection] Enabled", Float) = 0
-        _ReflectionReflectionPower ("[Reflection] Reflection Power", Range(0, 1)) = 0
+        _ReflectionReflectionPower ("[Reflection] Reflection Power", Range(0, 1)) = 1
         _ReflectionReflectionMask ("[Reflection] Reflection Mask", 2D) = "white" {}
         _ReflectionNormalMix ("[Reflection] Normal Map Mix", Range(0,2)) = 1
         _ReflectionCubemap ("[Reflection] Cubemap", Cube) = "_Skybox" {}
         _ReflectionRoughness ("[Reflection] Roughness", Range(0, 1)) = 0
         // Rim
         [Toggle(USE_RIM)]_UseRim ("[Rim] Enabled", Float) = 0
-        _RimBlend ("[Rim] Blend", Range(0, 3)) = 0
+        _RimBlend ("[Rim] Blend", Range(0, 3)) = 1
         _RimBlendMask ("[Rim] Blend Mask", 2D) = "white" {}
         _RimFresnelPower ("[Rim] Fresnel Power", Range(0, 10)) = 1
         _RimColor ("[Rim] Color", Color) = (1,1,1,1)
@@ -64,7 +64,7 @@ Shader "arktoon/Opaque" {
         [MaterialToggle] _RimUseBaseTexture ("[Rim] Use Base Texture", Float ) = 0
         // ShadowCap
         [Toggle(USE_SHADOWCAP)]_UseShadowCap ("[ShadowCap] Enabled", Float) = 0
-        _ShadowCapBlend ("[ShadowCap] Blend", Range(0, 3)) = 0
+        _ShadowCapBlend ("[ShadowCap] Blend", Range(0, 3)) = 1
         _ShadowCapBlendMask ("[ShadowCap] Blend Mask", 2D) = "white" {}
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
