@@ -9,8 +9,8 @@ Shader "arktoon/Opaque" {
         // Culling
         [Enum(UnityEngine.Rendering.CullMode)]_Cull("[Advanced] Cull", Float) = 2 // Back
         // Common
-        _BaseTexture ("[Common] Base Texture", 2D) = "white" {}
-        _BaseColor ("[Common] Base Color", Color) = (1,1,1,1)
+        _MainTex ("[Common] Base Texture", 2D) = "white" {}
+        _Color ("[Common] Base Color", Color) = (1,1,1,1)
         _Normalmap ("[Common] Normal map", 2D) = "bump" {}
         _Emissionmap ("[Common] Emission map", 2D) = "white" {}
         _EmissionColor ("[Common] Emission Color", Color) = (0,0,0,1)
@@ -99,8 +99,8 @@ Shader "arktoon/Opaque" {
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            uniform sampler2D _BaseTexture; uniform float4 _BaseTexture_ST;
-            uniform float4 _BaseColor;
+            uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
+            uniform float4 _Color;
             uniform float _GlossPower;
             uniform float4 _GlossColor;
             float3 ShadeSH9Indirect(){
@@ -228,8 +228,8 @@ Shader "arktoon/Opaque" {
                     float3 shadowcap = float3(1000,1000,1000);
                 #endif
 
-                float4 _BaseTexture_var = tex2D(_BaseTexture,TRANSFORM_TEX(i.uv0, _BaseTexture));
-                float3 Diffuse = (_BaseTexture_var.rgb*_BaseColor.rgb);
+                float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
+                float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
 
                 #ifdef USE_RIM
                     float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
@@ -317,8 +317,8 @@ Shader "arktoon/Opaque" {
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            uniform sampler2D _BaseTexture; uniform float4 _BaseTexture_ST;
-            uniform float4 _BaseColor;
+            uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
+            uniform float4 _Color;
             uniform float _GlossPower;
             uniform float4 _GlossColor;
 
@@ -379,8 +379,8 @@ Shader "arktoon/Opaque" {
                 float3 halfDirection = normalize(viewDirection+lightDirection);
 
                 UNITY_LIGHT_ATTENUATION(attenuation,i, i.posWorld.xyz);
-                float4 _BaseTexture_var = tex2D(_BaseTexture,TRANSFORM_TEX(i.uv0, _BaseTexture));
-                float3 Diffuse = (_BaseTexture_var.rgb*_BaseColor.rgb);
+                float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
+                float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
 
                 #ifdef USE_GLOSS
                     float _GlossBlendMask_var = tex2D(_GlossBlendMask, TRANSFORM_TEX(i.uv0, _GlossBlendMask));
@@ -429,8 +429,8 @@ Shader "arktoon/Opaque" {
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            uniform sampler2D _BaseTexture; uniform float4 _BaseTexture_ST;
-            uniform float4 _BaseColor;
+            uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
+            uniform float4 _Color;
             uniform float _OutlineWidth;
             uniform float _OutlineTextureColorRate;
             uniform sampler2D _OutlineWidthMask; uniform float4 _OutlineWidthMask_ST;
@@ -459,8 +459,8 @@ Shader "arktoon/Opaque" {
             }
             float4 frag(VertexOutput i) : COLOR {
                 #ifdef USE_OUTLINE
-                    float4 _BaseTexture_var = tex2D(_BaseTexture,TRANSFORM_TEX(i.uv0, _BaseTexture));
-                    float3 Diffuse = (_BaseTexture_var.rgb*_BaseColor.rgb);
+                    float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
+                    float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
                     return fixed4(lerp(_OutlineColor.rgb,Diffuse,_OutlineTextureColorRate),0);
                 #else
                     return fixed4(0,0,0,0);

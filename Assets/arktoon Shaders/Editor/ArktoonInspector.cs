@@ -84,8 +84,8 @@ namespace ArktoonShaders
             bool isCutout = shader.name.Contains("AlphaCutout");
 
             // FindProperties
-            BaseTexture = FindProperty("_BaseTexture", props);
-            BaseColor = FindProperty("_BaseColor", props);
+            BaseTexture = FindProperty("_MainTex", props);
+            BaseColor = FindProperty("_Color", props);
             Normalmap = FindProperty("_Normalmap", props);
             Emissionmap = FindProperty("_Emissionmap", props);
             EmissionColor = FindProperty("_EmissionColor", props);
@@ -146,7 +146,7 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Common", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
-                    materialEditor.TexturePropertySingleLine(new GUIContent("Base Texture", "Base Color Texture (RGB)"), BaseTexture, BaseColor);
+                    materialEditor.TexturePropertySingleLine(new GUIContent("Main Texture", "Base Color Texture (RGB)"), BaseTexture, BaseColor);
                     materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map", "Normal Map (RGB)"), Normalmap);
                     materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"), Emissionmap, EmissionColor);
                     EditorGUI.indentLevel --;
