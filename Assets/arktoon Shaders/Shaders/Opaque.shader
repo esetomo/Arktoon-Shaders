@@ -51,6 +51,7 @@ Shader "arktoon/Opaque" {
         [Toggle(USE_REFLECTION)]_UseReflection ("[Reflection] Enabled", Float) = 0
         _ReflectionReflectionPower ("[Reflection] Reflection Power", Range(0, 1)) = 0
         _ReflectionReflectionMask ("[Reflection] Reflection Mask", 2D) = "white" {}
+        _ReflectionNormalMix ("[Reflection] Normal Map Mix", Range(0,2)) = 1
         _ReflectionCubemap ("[Reflection] Cubemap", Cube) = "_Skybox" {}
         _ReflectionRoughness ("[Reflection] Roughness", Range(0, 1)) = 0
         // Rim
@@ -145,6 +146,7 @@ Shader "arktoon/Opaque" {
             uniform float _ReflectionRoughness;
             uniform float _ReflectionReflectionPower;
             uniform sampler2D _ReflectionReflectionMask; uniform float4 _ReflectionReflectionMask_ST;
+            uniform float _ReflectionNormalMix;
             uniform float _GlossBlend;
             uniform sampler2D _GlossBlendMask; uniform float4 _GlossBlendMask_ST;
             uniform float _RimFresnelPower;
@@ -200,7 +202,6 @@ Shader "arktoon/Opaque" {
                 float3 _Normalmap_var = UnpackNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)));
                 float3 normalLocal = _Normalmap_var.rgb;
                 float3 normalDirection = normalize(mul( normalLocal, tangentTransform )); // Perturbed normals
-                float3 viewReflectDirection = reflect( -viewDirection, normalDirection );
                 float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
                 float3 lightColor = _LightColor0.rgb;
                 float3 halfDirection = normalize(viewDirection+lightDirection);
@@ -277,6 +278,8 @@ Shader "arktoon/Opaque" {
                 #endif
 
                 #ifdef USE_REFLECTION
+                    float3 normalDirectionReflection = normalize(mul( float3(normalLocal.r*_ReflectionNormalMix, normalLocal.g*_ReflectionNormalMix, normalLocal.b), tangentTransform )); // Perturbed normals
+                    float3 viewReflectDirection = reflect( -viewDirection, normalDirectionReflection );
                     float4 _ReflectionReflectionMask_var = tex2D(_ReflectionReflectionMask,TRANSFORM_TEX(i.uv0, _ReflectionReflectionMask));
                     float3 ReflectionMap = (_ReflectionReflectionPower*_ReflectionReflectionMask_var.rgb*texCUBElod(_ReflectionCubemap,float4(viewReflectDirection,_ReflectionRoughness*15.0)).rgb);
                 #else
