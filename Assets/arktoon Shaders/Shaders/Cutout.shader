@@ -47,6 +47,7 @@ Shader "arktoon/AlphaCutout" {
         _MatcapBlend ("[MatCap] Blend", Range(0, 3)) = 1
         _MatcapBlendMask ("[MatCap] Blend Mask", 2D) = "white" {}
         _MatcapNormalMix ("[MatCap] Normal map mix", Range(0, 2)) = 1
+        _MatcapShadeMix ("[MatCap] Shade Mix", Range(0, 1)) = 0
         _MatcapTexture ("[MatCap] Texture", 2D) = "black" {}
         _MatcapColor ("[MatCap] Color", Color) = (1,1,1,1)
         // Reflection
@@ -54,12 +55,14 @@ Shader "arktoon/AlphaCutout" {
         _ReflectionReflectionPower ("[Reflection] Reflection Power", Range(0, 1)) = 1
         _ReflectionReflectionMask ("[Reflection] Reflection Mask", 2D) = "white" {}
         _ReflectionNormalMix ("[Reflection] Normal Map Mix", Range(0,2)) = 1
+        _ReflectionShadeMix ("[Reflection] Shade Mix", Range(0, 1)) = 0
         _ReflectionCubemap ("[Reflection] Cubemap", Cube) = "_Skybox" {}
         _ReflectionRoughness ("[Reflection] Roughness", Range(0, 1)) = 0
         // Rim
         [Toggle(USE_RIM)]_UseRim ("[Rim] Enabled", Float) = 0
         _RimBlend ("[Rim] Blend", Range(0, 3)) = 1
         _RimBlendMask ("[Rim] Blend Mask", 2D) = "white" {}
+        _RimShadeMix("[Rim] Shade Mix", Range(0, 1)) = 0
         _RimFresnelPower ("[Rim] Fresnel Power", Range(0, 10)) = 1
         _RimColor ("[Rim] Color", Color) = (1,1,1,1)
         _RimTexture ("[Rim] Texture", 2D) = "white" {}
@@ -146,23 +149,26 @@ Shader "arktoon/AlphaCutout" {
             uniform sampler2D _MatcapTexture; uniform float4 _MatcapTexture_ST;
             uniform float _MatcapBlend;
             uniform sampler2D _MatcapBlendMask; uniform float4 _MatcapBlendMask_ST;
+            uniform float4 _MatcapColor;
+            uniform float _MatcapNormalMix;
+            uniform float _MatcapShadeMix;
             uniform float _ReflectionRoughness;
             uniform float _ReflectionReflectionPower;
             uniform sampler2D _ReflectionReflectionMask; uniform float4 _ReflectionReflectionMask_ST;
             uniform float _ReflectionNormalMix;
+            uniform float _ReflectionShadeMix;
+            uniform samplerCUBE _ReflectionCubemap;
             uniform float _GlossBlend;
             uniform sampler2D _GlossBlendMask; uniform float4 _GlossBlendMask_ST;
             uniform float _RimFresnelPower;
             uniform float4 _RimColor;
             uniform fixed _RimUseBaseTexture;
             uniform float _RimBlend;
+            uniform float _RimShadeMix;
             uniform sampler2D _RimBlendMask; uniform float4 _RimBlendMask_ST;
             uniform sampler2D _RimTexture; uniform float4 _RimTexture_ST;
             uniform sampler2D _ShadowPlanBCustomShadowTexture; uniform float4 _ShadowPlanBCustomShadowTexture_ST;
             uniform float4 _ShadowPlanBCustomShadowTextureRGB;
-            uniform float4 _MatcapColor;
-            uniform float _MatcapNormalMix;
-            uniform samplerCUBE _ReflectionCubemap;
             uniform sampler2D _ShadowCapTexture; uniform float4 _ShadowCapTexture_ST;
             uniform sampler2D _ShadowCapBlendMask; uniform float4 _ShadowCapBlendMask_ST;
             uniform float _ShadowCapBlend;
@@ -212,16 +218,6 @@ Shader "arktoon/AlphaCutout" {
                 UNITY_LIGHT_ATTENUATION(attenuation,i, i.posWorld.xyz);
 ////// Emissive:
 
-                #ifdef USE_MATCAP
-                    float3 normalDirectionMatcap = normalize(mul( float3(normalLocal.r*_MatcapNormalMix,normalLocal.g*_MatcapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
-                    float2 transformMatcap = (mul( UNITY_MATRIX_V, float4(normalDirectionMatcap,0) ).xyz.rgb.rg*0.5+0.5);
-                    float4 _MatcapTexture_var = tex2D(_MatcapTexture,TRANSFORM_TEX(transformMatcap, _MatcapTexture));
-                    float4 _MatcapBlendMask_var = tex2D(_MatcapBlendMask,TRANSFORM_TEX(i.uv0, _MatcapBlendMask));
-                    float3 matcap = ((_MatcapColor.rgb*_MatcapTexture_var.rgb)*_MatcapBlendMask_var.rgb*_MatcapBlend);
-                #else
-                    float3 matcap = float3(0,0,0);
-                #endif
-
                 #ifdef USE_SHADOWCAP
                     float3 normalDirectionShadowCap = normalize(mul( float3(normalLocal.r*_ShadowCapNormalMix,normalLocal.g*_ShadowCapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
                     float2 transformShadowCap = (mul( UNITY_MATRIX_V, float4(normalDirectionShadowCap,0) ).xyz.rgb.rg*0.5+0.5);
@@ -236,16 +232,6 @@ Shader "arktoon/AlphaCutout" {
                 float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
                 clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
 
-                #ifdef USE_RIM
-                    float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
-                    float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
-                    float3 RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )*pow(1.0-max(0,dot(normalDirection, viewDirection)),_RimFresnelPower)*_RimBlend*_RimColor.rgb*_RimBlendMask_var);
-                #else
-                    float3 RimLight = float3(0,0,0);
-                #endif
-
-                float4 _Emissionmap_var = tex2D(_Emissionmap,TRANSFORM_TEX(i.uv0, _Emissionmap));
-                float3 emissive = max(((_Emissionmap_var.rgb*_EmissionColor.rgb)+matcap),RimLight);
                 float3 ShadeSH9Minus = ShadeSH9Indirect();
                 float3 indirectLighting = saturate(ShadeSH9Minus);
                 float3 ShadeSH9Plus = ShadeSH9Direct();
@@ -285,7 +271,7 @@ Shader "arktoon/AlphaCutout" {
                     float3 normalDirectionReflection = normalize(mul( float3(normalLocal.r*_ReflectionNormalMix, normalLocal.g*_ReflectionNormalMix, normalLocal.b), tangentTransform )); // Perturbed normals
                     float3 viewReflectDirection = reflect( -viewDirection, normalDirectionReflection );
                     float4 _ReflectionReflectionMask_var = tex2D(_ReflectionReflectionMask,TRANSFORM_TEX(i.uv0, _ReflectionReflectionMask));
-                    float3 ReflectionMap = (_ReflectionReflectionPower*_ReflectionReflectionMask_var.rgb*texCUBElod(_ReflectionCubemap,float4(viewReflectDirection,_ReflectionRoughness*15.0)).rgb);
+                    float3 ReflectionMap = (_ReflectionReflectionPower*_ReflectionReflectionMask_var.rgb*texCUBElod(_ReflectionCubemap,float4(viewReflectDirection,_ReflectionRoughness*15.0)).rgb)*lerp(float3(1,1,1), finalLight,_ReflectionShadeMix);
                 #else
                     float3 ReflectionMap = float3(0,0,0);
                 #endif
@@ -297,6 +283,26 @@ Shader "arktoon/AlphaCutout" {
                     float3 Gloss = float3(0,0,0);
                 #endif
 
+                #ifdef USE_MATCAP
+                    float3 normalDirectionMatcap = normalize(mul( float3(normalLocal.r*_MatcapNormalMix,normalLocal.g*_MatcapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
+                    float2 transformMatcap = (mul( UNITY_MATRIX_V, float4(normalDirectionMatcap,0) ).xyz.rgb.rg*0.5+0.5);
+                    float4 _MatcapTexture_var = tex2D(_MatcapTexture,TRANSFORM_TEX(transformMatcap, _MatcapTexture));
+                    float4 _MatcapBlendMask_var = tex2D(_MatcapBlendMask,TRANSFORM_TEX(i.uv0, _MatcapBlendMask));
+                    float3 matcap = ((_MatcapColor.rgb*_MatcapTexture_var.rgb)*_MatcapBlendMask_var.rgb*_MatcapBlend) * lerp(float3(1,1,1), finalLight,_MatcapShadeMix);
+                #else
+                    float3 matcap = float3(0,0,0);
+                #endif
+
+                #ifdef USE_RIM
+                    float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
+                    float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
+                    float3 RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )*pow(1.0-max(0,dot(normalDirection, viewDirection)),_RimFresnelPower)*_RimBlend*_RimColor.rgb*_RimBlendMask_var*lerp(float3(1,1,1), finalLight,_RimShadeMix));
+                #else
+                    float3 RimLight = float3(0,0,0);
+                #endif
+
+                float4 _Emissionmap_var = tex2D(_Emissionmap,TRANSFORM_TEX(i.uv0, _Emissionmap));
+                float3 emissive = max(((_Emissionmap_var.rgb*_EmissionColor.rgb)+matcap),RimLight);
                 float3 finalColor = emissive + min(max((ToonedMap+ReflectionMap),Gloss),shadowcap);
                 fixed4 finalRGBA = fixed4(finalColor,1);
                 UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
@@ -315,6 +321,8 @@ Shader "arktoon/AlphaCutout" {
             CGPROGRAM
             #pragma shader_feature USE_GLOSS
             #pragma shader_feature USE_SHADOWCAP
+            #pragma shader_feature USE_RIM
+            #pragma shader_feature USE_MATCAP
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
@@ -337,6 +345,21 @@ Shader "arktoon/AlphaCutout" {
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
             uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
             uniform float4 _EmissionColor;
+
+            uniform float _RimFresnelPower;
+            uniform float4 _RimColor;
+            uniform fixed _RimUseBaseTexture;
+            uniform float _RimBlend;
+            uniform float _RimShadeMix;
+            uniform sampler2D _RimBlendMask; uniform float4 _RimBlendMask_ST;
+            uniform sampler2D _RimTexture; uniform float4 _RimTexture_ST;
+
+            uniform sampler2D _MatcapTexture; uniform float4 _MatcapTexture_ST;
+            uniform float _MatcapBlend;
+            uniform sampler2D _MatcapBlendMask; uniform float4 _MatcapBlendMask_ST;
+            uniform float4 _MatcapColor;
+            uniform float _MatcapNormalMix;
+            uniform float _MatcapShadeMix;
 
             uniform float _GlossBlend;
             uniform sampler2D _GlossBlendMask; uniform float4 _GlossBlendMask_ST;
@@ -412,8 +435,30 @@ Shader "arktoon/AlphaCutout" {
                 float3 directContribution = (1.0 - (1.0 - saturate(((saturate(lightContribution) - _ShadowBoarderMin) / (_ShadowBoarderMax - _ShadowBoarderMin)))));
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
                 float3 finalLight = saturate(directContribution + ((1 - (_ShadowStrength * _ShadowStrengthMask_var)) * attenuation));
-                float3 ToonedMap = Diffuse * lerp(0, _LightColor0.rgb, finalLight);
-                float3 finalColor = min(max((ToonedMap),Gloss),shadowcap);
+                float3 coloredLight = lerp(0, _LightColor0.rgb, finalLight);
+
+                #ifdef USE_MATCAP
+                    float3 normalDirectionMatcap = normalize(mul( float3(normalLocal.r*_MatcapNormalMix,normalLocal.g*_MatcapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
+                    float2 transformMatcap = (mul( UNITY_MATRIX_V, float4(normalDirectionMatcap,0) ).xyz.rgb.rg*0.5+0.5);
+                    float4 _MatcapTexture_var = tex2D(_MatcapTexture,TRANSFORM_TEX(transformMatcap, _MatcapTexture));
+                    float4 _MatcapBlendMask_var = tex2D(_MatcapBlendMask,TRANSFORM_TEX(i.uv0, _MatcapBlendMask));
+                    float3 matcap = ((_MatcapColor.rgb*_MatcapTexture_var.rgb)*_MatcapBlendMask_var.rgb*_MatcapBlend);
+                    matcap = min(matcap, matcap * lerp(float3(0,0,0), coloredLight, _MatcapShadeMix));
+                #else
+                    float3 matcap = float3(0,0,0);
+                #endif
+
+                #ifdef USE_RIM
+                    float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
+                    float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
+                    float3 RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )*pow(1.0-max(0,dot(normalDirection, viewDirection)),_RimFresnelPower)*_RimBlend*_RimColor.rgb*_RimBlendMask_var);
+                    RimLight = min(RimLight, RimLight * lerp(float3(0,0,0), coloredLight, _RimShadeMix));
+                #else
+                    float3 RimLight = float3(0,0,0);
+                #endif
+
+                float3 ToonedMap = Diffuse * coloredLight;
+                float3 finalColor = matcap + min(max((max(ToonedMap, RimLight)),Gloss),shadowcap);
 
                 fixed4 finalRGBA = fixed4(finalColor * 1,0);
                 UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
