@@ -51,15 +51,18 @@ namespace ArktoonShaders
         MaterialProperty MatcapColor;
         MaterialProperty MatcapBlendMask;
         MaterialProperty MatcapNormalMix;
+        MaterialProperty MatcapShadeMix;
         MaterialProperty UseReflection;
         MaterialProperty ReflectionReflectionPower;
         MaterialProperty ReflectionReflectionMask;
         MaterialProperty ReflectionNormalMix;
+        MaterialProperty ReflectionShadeMix;
         MaterialProperty ReflectionCubemap;
         MaterialProperty ReflectionRoughness;
         MaterialProperty UseRim;
         MaterialProperty RimBlend;
         MaterialProperty RimBlendMask;
+        MaterialProperty RimShadeMix;
         MaterialProperty RimFresnelPower;
         MaterialProperty RimColor;
         MaterialProperty RimTexture;
@@ -119,15 +122,18 @@ namespace ArktoonShaders
             MatcapColor = FindProperty("_MatcapColor", props);
             MatcapBlendMask = FindProperty("_MatcapBlendMask", props);
             MatcapNormalMix = FindProperty("_MatcapNormalMix", props);
+            MatcapShadeMix = FindProperty("_MatcapShadeMix", props);
             UseReflection = FindProperty("_UseReflection", props);
             ReflectionReflectionPower = FindProperty("_ReflectionReflectionPower", props);
             ReflectionReflectionMask = FindProperty("_ReflectionReflectionMask", props);
             ReflectionNormalMix = FindProperty("_ReflectionNormalMix", props);
+            ReflectionShadeMix = FindProperty("_ReflectionShadeMix", props);
             ReflectionCubemap = FindProperty("_ReflectionCubemap", props);
             ReflectionRoughness = FindProperty("_ReflectionRoughness", props);
             UseRim = FindProperty("_UseRim", props);
             RimBlend = FindProperty("_RimBlend", props);
             RimBlendMask = FindProperty("_RimBlendMask", props);
+            RimShadeMix = FindProperty("_RimShadeMix", props);
             RimFresnelPower = FindProperty("_RimFresnelPower", props);
             RimColor = FindProperty("_RimColor", props);
             RimTexture = FindProperty("_RimTexture", props);
@@ -241,6 +247,7 @@ namespace ArktoonShaders
                         materialEditor.ShaderProperty(MatcapBlend,"Blend");
                         materialEditor.ShaderProperty(MatcapBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(MatcapNormalMix, "Normal Map mix");
+                        materialEditor.ShaderProperty(MatcapShadeMix,"Shadow mix");
                         materialEditor.ShaderProperty(MatcapTexture,"Texture");
                         materialEditor.ShaderProperty(MatcapColor,"Color");
                     }
@@ -257,8 +264,9 @@ namespace ArktoonShaders
                     {
                         materialEditor.ShaderProperty(ReflectionReflectionPower,"Blend");
                         materialEditor.ShaderProperty(ReflectionReflectionMask,"Blend Mask");
-                        materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap");
                         materialEditor.ShaderProperty(ReflectionNormalMix,"Normal Map mix");
+                        materialEditor.ShaderProperty(ReflectionShadeMix, "Shadow mix");
+                        materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap");
                         materialEditor.ShaderProperty(ReflectionRoughness,"Roughness");
                     }
                     EditorGUI.indentLevel--;
@@ -274,6 +282,7 @@ namespace ArktoonShaders
                     {
                         materialEditor.ShaderProperty(RimBlend,"Blend");
                         materialEditor.ShaderProperty(RimBlendMask,"Blend Mask");
+                        materialEditor.ShaderProperty(RimShadeMix,"Shadow mix");
                         materialEditor.ShaderProperty(RimFresnelPower,"Fresnel Power");
                         materialEditor.ShaderProperty(RimUseBaseTexture,"Use Base Color");
                         materialEditor.ShaderProperty(RimColor,"Color");
