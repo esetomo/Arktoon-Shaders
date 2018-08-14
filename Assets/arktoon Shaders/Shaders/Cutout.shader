@@ -17,8 +17,8 @@ Shader "arktoon/AlphaCutout" {
         // Cutout
         _CutoutCutoutAdjust ("Cutout Border Adjust", Range(0, 1)) = 0.5
         // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
-        _ShadowBoarderMin ("[Shadow] Boarder Min", Range(0, 1)) = 0.499
-        _ShadowBoarderMax ("[Shadow] Boarder Max", Range(0, 1)) = 0.55
+        _ShadowborderMin ("[Shadow] border Min", Range(0, 1)) = 0.499
+        _ShadowborderMax ("[Shadow] border Max", Range(0, 1)) = 0.55
         _ShadowStrength ("[Shadow] Strength", Range(0, 1)) = 0.5
         _ShadowStrengthMask ("[Shadow] Strength Mask", 2D) = "white" {}
         // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
@@ -116,8 +116,8 @@ Shader "arktoon/AlphaCutout" {
             uniform float _ShadowPlanBHueShiftFromBase;
             uniform float _ShadowPlanBSaturationFromBase;
             uniform float _ShadowPlanBValueFromBase;
-            uniform float _ShadowBoarderMin;
-            uniform float _ShadowBoarderMax;
+            uniform float _ShadowborderMin;
+            uniform float _ShadowborderMax;
             uniform float _ShadowStrength;
             uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
@@ -247,7 +247,7 @@ Shader "arktoon/AlphaCutout" {
                 float remappedLight = ((grayscaleDirectLighting-bottomIndirectLighting)/lightDifference);
                 float node_4614 = 0.0;
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
-                float directContribution = (1.0 - ((1.0 - saturate((node_4614 + ( (saturate(remappedLight) - _ShadowBoarderMin) * (1.0 - node_4614) ) / (_ShadowBoarderMax - _ShadowBoarderMin)))) * _ShadowStrengthMask_var * _ShadowStrength));
+                float directContribution = (1.0 - ((1.0 - saturate((node_4614 + ( (saturate(remappedLight) - _ShadowborderMin) * (1.0 - node_4614) ) / (_ShadowborderMax - _ShadowborderMin)))) * _ShadowStrengthMask_var * _ShadowStrength));
 
                 // 頂点ライティングを処理
 				float3 lightContribution = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);

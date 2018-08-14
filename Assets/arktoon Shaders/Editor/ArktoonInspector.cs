@@ -22,8 +22,8 @@ namespace ArktoonShaders
         MaterialProperty Normalmap;
         MaterialProperty Emissionmap;
         MaterialProperty EmissionColor;
-        MaterialProperty ShadowBoarderMin;
-        MaterialProperty ShadowBoarderMax;
+        MaterialProperty ShadowborderMin;
+        MaterialProperty ShadowborderMax;
         MaterialProperty ShadowStrength;
         MaterialProperty PointShadowStrength;
         MaterialProperty ShadowStrengthMask;
@@ -95,8 +95,8 @@ namespace ArktoonShaders
             Emissionmap = FindProperty("_Emissionmap", props);
             EmissionColor = FindProperty("_EmissionColor", props);
             if(isCutout) CutoutCutoutAdjust = FindProperty("_CutoutCutoutAdjust", props);
-            ShadowBoarderMin = FindProperty("_ShadowBoarderMin", props);
-            ShadowBoarderMax = FindProperty("_ShadowBoarderMax", props);
+            ShadowborderMin = FindProperty("_ShadowborderMin", props);
+            ShadowborderMax = FindProperty("_ShadowborderMax", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
@@ -176,8 +176,8 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Shadow", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
-                    materialEditor.ShaderProperty(ShadowBoarderMin, "Shadow Boarder End");
-                    materialEditor.ShaderProperty(ShadowBoarderMax, "Shadow Boarder Begin");
+                    materialEditor.ShaderProperty(ShadowborderMin, "Shadow border End");
+                    materialEditor.ShaderProperty(ShadowborderMax, "Shadow border Begin");
                     materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
                     materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength Mask");
                     materialEditor.ShaderProperty(ShadowPlanBUsePlanB, "Use Custom Shade");
