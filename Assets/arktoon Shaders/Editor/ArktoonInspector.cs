@@ -25,6 +25,7 @@ namespace ArktoonShaders
         MaterialProperty ShadowBoarderMin;
         MaterialProperty ShadowBoarderMax;
         MaterialProperty ShadowStrength;
+        MaterialProperty PointShadowStrength;
         MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
@@ -97,6 +98,7 @@ namespace ArktoonShaders
             ShadowBoarderMin = FindProperty("_ShadowBoarderMin", props);
             ShadowBoarderMax = FindProperty("_ShadowBoarderMax", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
+            PointShadowStrength = FindProperty("_PointShadowStrength", props);
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
             ShadowPlanBUseShadowMix = FindProperty("_ShadowPlanBUseShadowMix", props);
@@ -312,6 +314,7 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
+                    materialEditor.ShaderProperty(PointShadowStrength, "[exp] Point Shadow Str.");
                     materialEditor.ShaderProperty(Cull, "Cull");
                     if(isFade) materialEditor.ShaderProperty(ZWrite, "ZWrite");
                     EditorGUI.indentLevel --;

@@ -16,11 +16,13 @@ Shader "arktoon/AlphaCutout" {
         _EmissionColor ("[Common] Emission Color", Color) = (0,0,0,1)
         // Cutout
         _CutoutCutoutAdjust ("Cutout Border Adjust", Range(0, 1)) = 0.5
-        // Shadow
+        // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
         _ShadowBoarderMin ("[Shadow] Boarder Min", Range(0, 1)) = 0.499
         _ShadowBoarderMax ("[Shadow] Boarder Max", Range(0, 1)) = 0.55
         _ShadowStrength ("[Shadow] Strength", Range(0, 1)) = 0.5
         _ShadowStrengthMask ("[Shadow] Strength Mask", 2D) = "white" {}
+        // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
+        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.25
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         [Toggle(USE_SHADOW_MIX)]_ShadowPlanBUseShadowMix ("[Plan B] Use Shadow Mix", Float ) = 0
@@ -101,6 +103,7 @@ Shader "arktoon/AlphaCutout" {
             #include "UnityCG.cginc"
             #include "AutoLight.cginc"
             #include "Lighting.cginc"
+            #include "arklude.cginc"
             #pragma multi_compile_fwdbase_fullshadows
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
@@ -109,32 +112,6 @@ Shader "arktoon/AlphaCutout" {
             uniform float4 _Color;
             uniform float _GlossPower;
             uniform float4 _GlossColor;
-            float3 ShadeSH9Indirect(){
-                return ShadeSH9(half4(0.0, -1.0, 0.0, 1.0));
-            }
-
-            float3 ShadeSH9Direct(){
-                return ShadeSH9(half4(0.0, 1.0, 0.0, 1.0));
-            }
-
-            float3 grayscale_vector_node(){
-                return float3(0, 0.3823529, 0.01845836);
-            }
-
-            float3 ShadeSH9Normal( float3 normalDirection ){
-                return ShadeSH9(half4(normalDirection, 1.0));
-            }
-
-            float3 CalculateHSV(float3 baseTexture, float hueShift, float saturation, float value ){
-                float4 node_5443_k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-                float4 node_5443_p = lerp(float4(float4(baseTexture,0.0).zy, node_5443_k.wz), float4(float4(baseTexture,0.0).yz, node_5443_k.xy), step(float4(baseTexture,0.0).z, float4(baseTexture,0.0).y));
-                float4 node_5443_q = lerp(float4(node_5443_p.xyw, float4(baseTexture,0.0).x), float4(float4(baseTexture,0.0).x, node_5443_p.yzx), step(node_5443_p.x, float4(baseTexture,0.0).x));
-                float node_5443_d = node_5443_q.x - min(node_5443_q.w, node_5443_q.y);
-                float node_5443_e = 1.0e-10;
-                float3 node_5443 = float3(abs(node_5443_q.z + (node_5443_q.w - node_5443_q.y) / (6.0 * node_5443_d + node_5443_e)), node_5443_d / (node_5443_q.x + node_5443_e), node_5443_q.x);;
-                return (lerp(float3(1,1,1),saturate(3.0*abs(1.0-2.0*frac((hueShift+node_5443.r)+float3(0.0,-1.0/3.0,1.0/3.0)))-1),(node_5443.g*saturation))*(value*node_5443.b));
-            }
-
             uniform float _CutoutCutoutAdjust;
             uniform float _ShadowPlanBHueShiftFromBase;
             uniform float _ShadowPlanBSaturationFromBase;
@@ -142,6 +119,7 @@ Shader "arktoon/AlphaCutout" {
             uniform float _ShadowBoarderMin;
             uniform float _ShadowBoarderMax;
             uniform float _ShadowStrength;
+            uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
             uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
@@ -188,6 +166,8 @@ Shader "arktoon/AlphaCutout" {
                 float3 normalDir : TEXCOORD2;
                 float3 tangentDir : TEXCOORD3;
                 float3 bitangentDir : TEXCOORD4;
+                float3 ambient : TEXCOORD6;
+                float3 ambientAtten : TEXCOORD7;
                 LIGHTING_COORDS(5,6)
                 UNITY_FOG_COORDS(7)
             };
@@ -202,6 +182,28 @@ Shader "arktoon/AlphaCutout" {
                 o.pos = UnityObjectToClipPos( v.vertex );
                 UNITY_TRANSFER_FOG(o,o.pos);
                 TRANSFER_VERTEX_TO_FRAGMENT(o)
+
+                // 頂点ライティングが必要ば場合に取得
+                #if UNITY_SHOULD_SAMPLE_SH
+                    #if defined(VERTEXLIGHT_ON)
+                        o.ambient = Shade4PointLights(
+                            unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
+                            unity_LightColor[0].rgb, unity_LightColor[1].rgb,
+                            unity_LightColor[2].rgb, unity_LightColor[3].rgb,
+                            unity_4LightAtten0, o.posWorld, o.normalDir
+                        );
+                        o.ambientAtten = Shade4PointLightsIndirect(
+                            unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
+                            unity_LightColor[0].rgb, unity_LightColor[1].rgb,
+                            unity_LightColor[2].rgb, unity_LightColor[3].rgb,
+                            unity_4LightAtten0, o.posWorld, o.normalDir
+                        );
+                    #else
+                        o.ambient = o.ambientAtten = 0;
+                    #endif
+                #else
+                    o.ambient = o.ambientAtten = 0;
+                #endif
                 return o;
             }
             float4 frag(VertexOutput i) : COLOR {
@@ -246,7 +248,14 @@ Shader "arktoon/AlphaCutout" {
                 float node_4614 = 0.0;
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
                 float directContribution = (1.0 - ((1.0 - saturate((node_4614 + ( (saturate(remappedLight) - _ShadowBoarderMin) * (1.0 - node_4614) ) / (_ShadowBoarderMax - _ShadowBoarderMin)))) * _ShadowStrengthMask_var * _ShadowStrength));
-                float3 finalLight = lerp(indirectLighting,directLighting,directContribution);
+
+                // 頂点ライティングを処理
+				float3 lightContribution = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
+                float3 directContributionVertex = (1.0 - (1.0 - saturate(saturate(lightContribution))));
+                float3 finalVertexLight = saturate(directContributionVertex + (1 - (_PointShadowStrength * _ShadowStrengthMask_var)));
+                float3 coloredLight = lightContribution;
+
+                float3 finalLight = lerp(indirectLighting,directLighting,directContribution)+coloredLight;
 
                 #ifdef USE_SHADE_TEXTURE
                     #ifdef USE_SHADOW_MIX
@@ -338,9 +347,7 @@ Shader "arktoon/AlphaCutout" {
             uniform float4 _GlossColor;
 
             uniform float _CutoutCutoutAdjust;
-            uniform float _ShadowBoarderMin;
-            uniform float _ShadowBoarderMax;
-            uniform float _ShadowStrength;
+            uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
             uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
@@ -432,9 +439,9 @@ Shader "arktoon/AlphaCutout" {
                 #endif
 
 				float lightContribution = dot(normalize(_WorldSpaceLightPos0.xyz - i.posWorld.xyz),normalDirection)*attenuation;
-                float3 directContribution = (1.0 - (1.0 - saturate(((saturate(lightContribution) - _ShadowBoarderMin) / (_ShadowBoarderMax - _ShadowBoarderMin)))));
+                float3 directContribution = (1.0 - (1.0 - saturate(saturate(lightContribution))));
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
-                float3 finalLight = saturate(directContribution + ((1 - (_ShadowStrength * _ShadowStrengthMask_var)) * attenuation));
+                float3 finalLight = saturate(directContribution + ((1 - (_PointShadowStrength * _ShadowStrengthMask_var)) * attenuation));
                 float3 coloredLight = lerp(0, _LightColor0.rgb, finalLight);
 
                 #ifdef USE_MATCAP
