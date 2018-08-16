@@ -178,7 +178,6 @@ Shader "arktoon/AlphaCutout" {
                 o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
                 o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
                 o.posWorld = mul(unity_ObjectToWorld, v.vertex);
-                float3 lightColor = _LightColor0.rgb;
                 o.pos = UnityObjectToClipPos( v.vertex );
                 UNITY_TRANSFER_FOG(o,o.pos);
                 TRANSFER_VERTEX_TO_FRAGMENT(o)
@@ -213,7 +212,7 @@ Shader "arktoon/AlphaCutout" {
                 float3 _Normalmap_var = UnpackNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)));
                 float3 normalLocal = _Normalmap_var.rgb;
                 float3 normalDirection = normalize(mul( normalLocal, tangentTransform )); // Perturbed normals
-                float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
+                float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz + float3(0, +0.0000000001, 0));
                 float3 lightColor = _LightColor0.rgb;
                 float3 halfDirection = normalize(viewDirection+lightDirection);
 ////// Lighting:
@@ -237,9 +236,9 @@ Shader "arktoon/AlphaCutout" {
                 float3 ShadeSH9Minus = ShadeSH9Indirect();
                 float3 indirectLighting = saturate(ShadeSH9Minus);
                 float3 ShadeSH9Plus = ShadeSH9Direct();
-                float3 directLighting = saturate((ShadeSH9Plus+_LightColor0.rgb));
+                float3 directLighting = saturate((ShadeSH9Plus+lightColor));
                 float3 grayscale_vector = grayscale_vector_node();
-                float grayscalelightcolor = dot(_LightColor0.rgb,grayscale_vector);
+                float grayscalelightcolor = dot(lightColor,grayscale_vector);
                 float grayscaleDirectLighting = ((dot(lightDirection,normalDirection)*grayscalelightcolor*attenuation)+dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
                 float bottomIndirectLighting = dot(ShadeSH9Minus,grayscale_vector);
                 float topIndirectLighting = dot(ShadeSH9Plus,grayscale_vector);
@@ -287,7 +286,7 @@ Shader "arktoon/AlphaCutout" {
 
                 #ifdef USE_GLOSS
                     float _GlossBlendMask_var = tex2D(_GlossBlendMask, TRANSFORM_TEX(i.uv0, _GlossBlendMask));
-                    float3 Gloss = ((max(0,dot(lightDirection,normalDirection))*pow(max(0,dot(normalDirection,halfDirection)),exp2(lerp(1,11,_GlossPower)))*_GlossColor.rgb)*_LightColor0.rgb*attenuation*_GlossBlend * _GlossBlendMask_var);
+                    float3 Gloss = ((max(0,dot(lightDirection,normalDirection))*pow(max(0,dot(normalDirection,halfDirection)),exp2(lerp(1,11,_GlossPower)))*_GlossColor.rgb)*lightColor*attenuation*_GlossBlend * _GlossBlendMask_var);
                 #else
                     float3 Gloss = float3(0,0,0);
                 #endif
