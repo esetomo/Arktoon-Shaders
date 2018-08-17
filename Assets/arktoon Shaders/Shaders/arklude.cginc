@@ -81,3 +81,56 @@ float3 CalculateHSV(float3 baseTexture, float hueShift, float saturation, float 
     float3 node_5443 = float3(abs(node_5443_q.z + (node_5443_q.w - node_5443_q.y) / (6.0 * node_5443_d + node_5443_e)), node_5443_d / (node_5443_q.x + node_5443_e), node_5443_q.x);;
     return (lerp(float3(1,1,1),saturate(3.0*abs(1.0-2.0*frac((hueShift+node_5443.r)+float3(0.0,-1.0/3.0,1.0/3.0)))-1),(node_5443.g*saturation))*(value*node_5443.b));
 }
+
+struct VertexInput {
+    float4 vertex : POSITION;
+    float3 normal : NORMAL;
+    float4 tangent : TANGENT;
+    float2 texcoord0 : TEXCOORD0;
+};
+struct VertexOutput {
+    float4 pos : SV_POSITION;
+    float2 uv0 : TEXCOORD0;
+    float4 posWorld : TEXCOORD1;
+    float3 normalDir : TEXCOORD2;
+    float3 tangentDir : TEXCOORD3;
+    float3 bitangentDir : TEXCOORD4;
+    float3 ambient : TEXCOORD6;
+    float3 ambientAtten : TEXCOORD7;
+    LIGHTING_COORDS(5,6)
+    UNITY_FOG_COORDS(7)
+};
+VertexOutput vert (VertexInput v) {
+    VertexOutput o = (VertexOutput)0;
+    o.uv0 = v.texcoord0;
+    o.normalDir = UnityObjectToWorldNormal(v.normal);
+    o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
+    o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
+    o.posWorld = mul(unity_ObjectToWorld, v.vertex);
+    o.pos = UnityObjectToClipPos( v.vertex );
+    UNITY_TRANSFER_FOG(o,o.pos);
+    TRANSFER_VERTEX_TO_FRAGMENT(o)
+
+    // 頂点ライティングが必要ば場合に取得
+    #if UNITY_SHOULD_SAMPLE_SH
+        #if defined(VERTEXLIGHT_ON)
+            o.ambient = Shade4PointLights(
+                unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
+                unity_LightColor[0].rgb, unity_LightColor[1].rgb,
+                unity_LightColor[2].rgb, unity_LightColor[3].rgb,
+                unity_4LightAtten0, o.posWorld, o.normalDir
+            );
+            o.ambientAtten = Shade4PointLightsIndirect(
+                unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
+                unity_LightColor[0].rgb, unity_LightColor[1].rgb,
+                unity_LightColor[2].rgb, unity_LightColor[3].rgb,
+                unity_4LightAtten0, o.posWorld, o.normalDir
+            );
+        #else
+            o.ambient = o.ambientAtten = 0;
+        #endif
+    #else
+        o.ambient = o.ambientAtten = 0;
+    #endif
+    return o;
+}

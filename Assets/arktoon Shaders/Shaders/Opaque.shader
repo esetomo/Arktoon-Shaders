@@ -152,58 +152,8 @@ Shader "arktoon/Opaque" {
             uniform float4 _ShadowCapColor;
             uniform float _ShadowCapNormalMix;
 
-            struct VertexInput {
-                float4 vertex : POSITION;
-                float3 normal : NORMAL;
-                float4 tangent : TANGENT;
-                float2 texcoord0 : TEXCOORD0;
-            };
-            struct VertexOutput {
-                float4 pos : SV_POSITION;
-                float2 uv0 : TEXCOORD0;
-                float4 posWorld : TEXCOORD1;
-                float3 normalDir : TEXCOORD2;
-                float3 tangentDir : TEXCOORD3;
-                float3 bitangentDir : TEXCOORD4;
-                float3 ambient : TEXCOORD6;
-                float3 ambientAtten : TEXCOORD7;
-                LIGHTING_COORDS(5,6)
-                UNITY_FOG_COORDS(7)
-            };
-            VertexOutput vert (VertexInput v) {
-                VertexOutput o = (VertexOutput)0;
-                o.uv0 = v.texcoord0;
-                o.normalDir = UnityObjectToWorldNormal(v.normal);
-                o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
-                o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
-                o.posWorld = mul(unity_ObjectToWorld, v.vertex);
-                o.pos = UnityObjectToClipPos( v.vertex );
-                UNITY_TRANSFER_FOG(o,o.pos);
-                TRANSFER_VERTEX_TO_FRAGMENT(o)
+            // vert は arklude.cginc に移動
 
-                // 頂点ライティングが必要ば場合に取得
-                #if UNITY_SHOULD_SAMPLE_SH
-                    #if defined(VERTEXLIGHT_ON)
-                        o.ambient = Shade4PointLights(
-                            unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
-                            unity_LightColor[0].rgb, unity_LightColor[1].rgb,
-                            unity_LightColor[2].rgb, unity_LightColor[3].rgb,
-                            unity_4LightAtten0, o.posWorld, o.normalDir
-                        );
-                        o.ambientAtten = Shade4PointLightsIndirect(
-                            unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
-                            unity_LightColor[0].rgb, unity_LightColor[1].rgb,
-                            unity_LightColor[2].rgb, unity_LightColor[3].rgb,
-                            unity_4LightAtten0, o.posWorld, o.normalDir
-                        );
-                    #else
-                        o.ambient = o.ambientAtten = 0;
-                    #endif
-                #else
-                    o.ambient = o.ambientAtten = 0;
-                #endif
-                return o;
-            }
             float4 frag(VertexOutput i) : COLOR {
                 i.normalDir = normalize(i.normalDir);
                 float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
@@ -243,9 +193,8 @@ Shader "arktoon/Opaque" {
                 float topIndirectLighting = dot(ShadeSH9Plus,grayscale_vector);
                 float lightDifference = ((topIndirectLighting+grayscalelightcolor)-bottomIndirectLighting);
                 float remappedLight = ((grayscaleDirectLighting-bottomIndirectLighting)/lightDifference);
-                float node_4614 = 0.0;
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
-                float directContribution = (1.0 - ((1.0 - saturate((node_4614 + ( (saturate(remappedLight) - _ShadowborderMin) * (1.0 - node_4614) ) / (_ShadowborderMax - _ShadowborderMin)))) * _ShadowStrengthMask_var * _ShadowStrength));
+                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - _ShadowborderMin)) / (_ShadowborderMax - _ShadowborderMin))) * _ShadowStrengthMask_var * _ShadowStrength);
 
                 // 頂点ライティングを処理
 				float3 lightContribution = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
@@ -395,7 +344,6 @@ Shader "arktoon/Opaque" {
                 o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
                 o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
                 o.posWorld = mul(unity_ObjectToWorld, v.vertex);
-                float3 lightColor = _LightColor0.rgb;
                 o.pos = UnityObjectToClipPos( v.vertex );
                 UNITY_TRANSFER_FOG(o,o.pos);
                 TRANSFER_VERTEX_TO_FRAGMENT(o)
@@ -438,7 +386,7 @@ Shader "arktoon/Opaque" {
                 float3 directContribution = (1.0 - (1.0 - saturate(saturate(lightContribution))));
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
                 float3 finalLight = saturate(directContribution + ((1 - (_PointShadowStrength * _ShadowStrengthMask_var)) * attenuation));
-                float3 coloredLight = lerp(0, _LightColor0.rgb, finalLight);
+                float3 coloredLight = lightColor*finalLight;
 
                 #ifdef USE_MATCAP
                     float3 normalDirectionMatcap = normalize(mul( float3(normalLocal.r*_MatcapNormalMix,normalLocal.g*_MatcapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
@@ -446,7 +394,7 @@ Shader "arktoon/Opaque" {
                     float4 _MatcapTexture_var = tex2D(_MatcapTexture,TRANSFORM_TEX(transformMatcap, _MatcapTexture));
                     float4 _MatcapBlendMask_var = tex2D(_MatcapBlendMask,TRANSFORM_TEX(i.uv0, _MatcapBlendMask));
                     float3 matcap = ((_MatcapColor.rgb*_MatcapTexture_var.rgb)*_MatcapBlendMask_var.rgb*_MatcapBlend);
-                    matcap = min(matcap, matcap * lerp(float3(0,0,0), coloredLight, _MatcapShadeMix));
+                    matcap = min(matcap, matcap * (coloredLight * _MatcapShadeMix));
                 #else
                     float3 matcap = float3(0,0,0);
                 #endif
@@ -455,7 +403,7 @@ Shader "arktoon/Opaque" {
                     float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
                     float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
                     float3 RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )*pow(1.0-max(0,dot(normalDirection, viewDirection)),_RimFresnelPower)*_RimBlend*_RimColor.rgb*_RimBlendMask_var);
-                    RimLight = min(RimLight, RimLight * lerp(float3(0,0,0), coloredLight, _RimShadeMix));
+                    RimLight = min(RimLight, RimLight * (coloredLight * _RimShadeMix));
                 #else
                     float3 RimLight = float3(0,0,0);
                 #endif
