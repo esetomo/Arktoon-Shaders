@@ -28,7 +28,7 @@ Shader "arktoon/Fade" {
         [Toggle(USE_CUSTOM_SHADOW_TEXTURE)] _ShadowPlanBUseCustomShadowTexture ("[Plan B] Use Custom Shadow Texture", Float ) = 0
         _ShadowPlanBHueShiftFromBase ("[Plan B] Hue Shift From Base", Range(-1, 1)) = 0
         _ShadowPlanBSaturationFromBase ("[Plan B] Saturation From Base", Range(0, 2)) = 1
-        _ShadowPlanBValueFromBase ("[Plan B] Value From Base", Range(0, 2)) = 0
+        _ShadowPlanBValueFromBase ("[Plan B] Value From Base", Range(0, 2)) = 1
         _ShadowPlanBCustomShadowTexture ("[Plan B] Custom Shadow Texture", 2D) = "black" {}
         _ShadowPlanBCustomShadowTextureRGB ("[Plan B] Custom Shadow Texture RGB", Color) = (1,1,1,1)
         // Gloss
