@@ -21,8 +21,13 @@ Shader "arktoon/Opaque" {
         _ShadowborderMax ("[Shadow] border Max", Range(0, 1)) = 0.55
         _ShadowStrength ("[Shadow] Strength", Range(0, 1)) = 0.5
         _ShadowStrengthMask ("[Shadow] Strength Mask", 2D) = "white" {}
+        // Shadow steps
+        [Toggle(USE_SHADOW_STEPS)]_ShadowUseStep ("[Shadow] use step", Float ) = 0
+        _ShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
         _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.25
+        // [Toggle(USE_POINT_SHADOW_STEPS)]_PointShadowUseStep ("[Shadow] use step", Float ) = 0
+        // _PointShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         [Toggle(USE_SHADOW_MIX)]_ShadowPlanBUseShadowMix ("[Plan B] Use Shadow Mix", Float ) = 0
@@ -97,6 +102,7 @@ Shader "arktoon/Opaque" {
             #pragma shader_feature USE_RIM
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE
+            #pragma shader_feature USE_SHADOW_STEPS
 
             #pragma vertex vert
             #pragma fragment frag
@@ -118,6 +124,7 @@ Shader "arktoon/Opaque" {
             uniform float _ShadowborderMin;
             uniform float _ShadowborderMax;
             uniform float _ShadowStrength;
+            uniform int _ShadowSteps;
             uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
@@ -194,7 +201,13 @@ Shader "arktoon/Opaque" {
                 float lightDifference = ((topIndirectLighting+grayscalelightcolor)-bottomIndirectLighting);
                 float remappedLight = ((grayscaleDirectLighting-bottomIndirectLighting)/lightDifference);
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
-                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - _ShadowborderMin)) / (_ShadowborderMax - _ShadowborderMin))) * _ShadowStrengthMask_var * _ShadowStrength);
+                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - _ShadowborderMin)) / (_ShadowborderMax - _ShadowborderMin))));
+
+                #ifdef USE_SHADOW_STEPS
+                    directContribution = min(1,floor(directContribution * _ShadowSteps) / (_ShadowSteps - 1));
+                #endif
+
+                directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * _ShadowStrength;
 
                 // 頂点ライティングを処理
 				float3 lightContribution = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);

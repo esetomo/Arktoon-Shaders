@@ -25,6 +25,8 @@ namespace ArktoonShaders
         MaterialProperty ShadowborderMin;
         MaterialProperty ShadowborderMax;
         MaterialProperty ShadowStrength;
+        MaterialProperty ShadowUseStep;
+        MaterialProperty ShadowSteps;
         MaterialProperty PointShadowStrength;
         MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
@@ -98,6 +100,8 @@ namespace ArktoonShaders
             ShadowborderMin = FindProperty("_ShadowborderMin", props);
             ShadowborderMax = FindProperty("_ShadowborderMax", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
+            ShadowUseStep = FindProperty("_ShadowUseStep", props);
+            ShadowSteps = FindProperty("_ShadowSteps", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
@@ -180,6 +184,13 @@ namespace ArktoonShaders
                     materialEditor.ShaderProperty(ShadowborderMax, "Shadow border Begin");
                     materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
                     materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength Mask");
+                    materialEditor.ShaderProperty(ShadowUseStep, "Use Shadow Steps");
+                    var useStep = ShadowUseStep.floatValue;
+                    if(useStep > 0)
+                    {
+                        materialEditor.ShaderProperty(ShadowSteps, " ");
+                    }
+
                     materialEditor.ShaderProperty(ShadowPlanBUsePlanB, "Use Custom Shade");
                     var usePlanB = ShadowPlanBUsePlanB.floatValue;
                     if(usePlanB > 0)
@@ -314,9 +325,14 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
-                    materialEditor.ShaderProperty(PointShadowStrength, "[exp] Point Shadow Str.");
                     materialEditor.ShaderProperty(Cull, "Cull");
                     if(isFade) materialEditor.ShaderProperty(ZWrite, "ZWrite");
+                    EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(PointShadowStrength, "Strength");
+                        EditorGUI.indentLevel --;
+                    }
                     EditorGUI.indentLevel --;
                 }
             }
