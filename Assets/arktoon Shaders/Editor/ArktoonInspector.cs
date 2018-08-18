@@ -20,11 +20,14 @@ namespace ArktoonShaders
         MaterialProperty BaseTexture;
         MaterialProperty BaseColor;
         MaterialProperty Normalmap;
-        MaterialProperty Emissionmap;
+        MaterialProperty BumpScale;
+        MaterialProperty EmissionMap;
         MaterialProperty EmissionColor;
         MaterialProperty ShadowborderMin;
         MaterialProperty ShadowborderMax;
         MaterialProperty ShadowStrength;
+        MaterialProperty ShadowUseStep;
+        MaterialProperty ShadowSteps;
         MaterialProperty PointShadowStrength;
         MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
@@ -47,6 +50,7 @@ namespace ArktoonShaders
         MaterialProperty OutlineColor;
         MaterialProperty OutlineTextureColorRate;
         MaterialProperty UseMatcap;
+        MaterialProperty MatcapBlendMode;
         MaterialProperty MatcapBlend;
         MaterialProperty MatcapTexture;
         MaterialProperty MatcapColor;
@@ -69,6 +73,7 @@ namespace ArktoonShaders
         MaterialProperty RimTexture;
         MaterialProperty RimUseBaseTexture;
         MaterialProperty UseShadowCap;
+        MaterialProperty ShadowCapBlendMode;
         MaterialProperty ShadowCapBlend;
         MaterialProperty ShadowCapBlendMask;
         MaterialProperty ShadowCapNormalMix;
@@ -91,13 +96,16 @@ namespace ArktoonShaders
             // FindProperties
             BaseTexture = FindProperty("_MainTex", props);
             BaseColor = FindProperty("_Color", props);
-            Normalmap = FindProperty("_Normalmap", props);
-            Emissionmap = FindProperty("_Emissionmap", props);
+            Normalmap = FindProperty("_BumpMap", props);
+            BumpScale = FindProperty("_BumpScale", props);
+            EmissionMap = FindProperty("_EmissionMap", props);
             EmissionColor = FindProperty("_EmissionColor", props);
             if(isCutout) CutoutCutoutAdjust = FindProperty("_CutoutCutoutAdjust", props);
             ShadowborderMin = FindProperty("_ShadowborderMin", props);
             ShadowborderMax = FindProperty("_ShadowborderMax", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
+            ShadowUseStep = FindProperty("_ShadowUseStep", props);
+            ShadowSteps = FindProperty("_ShadowSteps", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
@@ -119,6 +127,7 @@ namespace ArktoonShaders
             if(isOpaque || isCutout) OutlineColor = FindProperty("_OutlineColor", props);
             if(isOpaque || isCutout) OutlineTextureColorRate = FindProperty("_OutlineTextureColorRate", props);
             UseMatcap = FindProperty("_UseMatcap", props);
+            MatcapBlendMode = FindProperty("_MatcapBlendMode", props);
             MatcapBlend = FindProperty("_MatcapBlend", props);
             MatcapTexture = FindProperty("_MatcapTexture", props);
             MatcapColor = FindProperty("_MatcapColor", props);
@@ -141,6 +150,7 @@ namespace ArktoonShaders
             RimTexture = FindProperty("_RimTexture", props);
             RimUseBaseTexture = FindProperty("_RimUseBaseTexture", props);
             UseShadowCap = FindProperty("_UseShadowCap", props);
+            ShadowCapBlendMode = FindProperty("_ShadowCapBlendMode", props);
             ShadowCapBlend = FindProperty("_ShadowCapBlend", props);
             ShadowCapBlendMask = FindProperty("_ShadowCapBlendMask", props);
             ShadowCapNormalMix = FindProperty("_ShadowCapNormalMix", props);
@@ -157,8 +167,8 @@ namespace ArktoonShaders
                 {
                     EditorGUI.indentLevel ++;
                     materialEditor.TexturePropertySingleLine(new GUIContent("Main Texture", "Base Color Texture (RGB)"), BaseTexture, BaseColor);
-                    materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map", "Normal Map (RGB)"), Normalmap);
-                    materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"), Emissionmap, EmissionColor);
+                    materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map", "Normal Map (RGB)"), Normalmap, BumpScale);
+                    materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"), EmissionMap, EmissionColor);
                     EditorGUI.indentLevel --;
                 }
 
@@ -180,6 +190,13 @@ namespace ArktoonShaders
                     materialEditor.ShaderProperty(ShadowborderMax, "Shadow border Begin");
                     materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
                     materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength Mask");
+                    materialEditor.ShaderProperty(ShadowUseStep, "Use Shadow Steps");
+                    var useStep = ShadowUseStep.floatValue;
+                    if(useStep > 0)
+                    {
+                        materialEditor.ShaderProperty(ShadowSteps, " ");
+                    }
+
                     materialEditor.ShaderProperty(ShadowPlanBUsePlanB, "Use Custom Shade");
                     var usePlanB = ShadowPlanBUsePlanB.floatValue;
                     if(usePlanB > 0)
@@ -246,6 +263,8 @@ namespace ArktoonShaders
                     var useMatcap = UseMatcap.floatValue;
                     if(useMatcap > 0)
                     {
+
+                        materialEditor.ShaderProperty(MatcapBlendMode,"Blend Mode");
                         materialEditor.ShaderProperty(MatcapBlend,"Blend");
                         materialEditor.ShaderProperty(MatcapBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(MatcapNormalMix, "Normal Map mix");
@@ -301,6 +320,7 @@ namespace ArktoonShaders
                     var useShadowCap = UseShadowCap.floatValue;
                     if(useShadowCap > 0)
                     {
+                        materialEditor.ShaderProperty(ShadowCapBlendMode,"Blend Mode");
                         materialEditor.ShaderProperty(ShadowCapBlend,"Blend");
                         materialEditor.ShaderProperty(ShadowCapBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(ShadowCapNormalMix,"Normal Map mix");
@@ -314,9 +334,14 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
-                    materialEditor.ShaderProperty(PointShadowStrength, "[exp] Point Shadow Str.");
                     materialEditor.ShaderProperty(Cull, "Cull");
                     if(isFade) materialEditor.ShaderProperty(ZWrite, "ZWrite");
+                    EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(PointShadowStrength, "Strength");
+                        EditorGUI.indentLevel --;
+                    }
                     EditorGUI.indentLevel --;
                 }
             }
