@@ -50,6 +50,7 @@ Shader "arktoon/AlphaCutout" {
         _OutlineTextureColorRate ("[Outline] Texture Color Rate", Range(0, 1)) = 0.05
         // MatCap
         [Toggle(USE_MATCAP)]_UseMatcap ("[MatCap] Enabled", Float) = 0
+        [KeywordEnum(Add, Lighten, Screen)] _MatcapBlendMode ("[MatCap] Blend Mode", Float) = 0
         _MatcapBlend ("[MatCap] Blend", Range(0, 3)) = 1
         _MatcapBlendMask ("[MatCap] Blend Mask", 2D) = "white" {}
         _MatcapNormalMix ("[MatCap] Normal map mix", Range(0, 2)) = 1
@@ -75,6 +76,7 @@ Shader "arktoon/AlphaCutout" {
         [MaterialToggle] _RimUseBaseTexture ("[Rim] Use Base Texture", Float ) = 0
         // ShadowCap
         [Toggle(USE_SHADOWCAP)]_UseShadowCap ("[ShadowCap] Enabled", Float) = 0
+        [KeywordEnum(Darken, Multiply)] _ShadowCapBlendMode ("[ShadowCap] Blend Mode", Float) = 0
         _ShadowCapBlend ("[ShadowCap] Blend", Range(0, 3)) = 1
         _ShadowCapBlendMask ("[ShadowCap] Blend Mask", 2D) = "white" {}
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
@@ -102,6 +104,8 @@ Shader "arktoon/AlphaCutout" {
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE
             #pragma shader_feature USE_SHADOW_STEPS
+            #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
+            #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
             #pragma fragment frag
@@ -272,8 +276,30 @@ Shader "arktoon/AlphaCutout" {
                 #endif
 
                 float4 _EmissionMap_var = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap));
-                float3 emissive = max(((_EmissionMap_var.rgb*_EmissionColor.rgb)+matcap),RimLight);
-                float3 finalColor = emissive + min(max((ToonedMap+ReflectionMap),Gloss),shadowcap);
+                float3 emissive = max((_EmissionMap_var.rgb*_EmissionColor.rgb),RimLight);
+                float3 finalcolor2 = max((ToonedMap+ReflectionMap),Gloss);
+
+                // ShadeCapのブレンドモード
+                #ifdef USE_SHADOWCAP
+                    #ifdef _SHADOWCAPBLENDMODE_DARKEN
+                        finalcolor2 = min(finalcolor2, shadowcap);
+                    #elif _SHADOWCAPBLENDMODE_MULTIPLY
+                        finalcolor2 = finalcolor2 * shadowcap;
+                    #endif
+                #endif
+
+                // MatCapのブレンドモード
+                #ifdef USE_MATCAP
+                    #ifdef _MATCAPBLENDMODE_LIGHTEN
+                        finalcolor2 = max(finalcolor2, matcap);
+                    #elif _MATCAPBLENDMODE_ADD
+                        finalcolor2 = finalcolor2 + matcap;
+                    #elif _MATCAPBLENDMODE_SCREEN
+                        finalcolor2 = 1-(1-finalcolor2) * (1-matcap);
+                    #endif
+                #endif
+
+                float3 finalColor = emissive + finalcolor2;
                 fixed4 finalRGBA = fixed4(finalColor,1);
                 UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
                 return finalRGBA;
@@ -293,6 +319,9 @@ Shader "arktoon/AlphaCutout" {
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_RIM
             #pragma shader_feature USE_MATCAP
+            #pragma multi_compile _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_SCREEN
+            #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
+
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
@@ -426,7 +455,27 @@ Shader "arktoon/AlphaCutout" {
                 #endif
 
                 float3 ToonedMap = Diffuse * coloredLight;
-                float3 finalColor = matcap + min(max((max(ToonedMap, RimLight)),Gloss),shadowcap);
+                float3 finalColor = max((max(ToonedMap, RimLight)),Gloss);
+
+                // ShadeCapのブレンドモード
+                #ifdef USE_SHADOWCAP
+                    #ifdef _SHADOWCAPBLENDMODE_DARKEN
+                        finalColor = min(finalColor, shadowcap);
+                    #elif _SHADOWCAPBLENDMODE_MULTIPLY
+                        finalColor = finalColor * shadowcap;
+                    #endif
+                #endif
+
+                // MatCapのブレンドモード
+                #ifdef USE_MATCAP
+                    #ifdef _MATCAPBLENDMODE_LIGHTEN
+                        finalColor = max(finalColor, matcap);
+                    #elif _MATCAPBLENDMODE_ADD
+                        finalColor = finalColor + matcap;
+                    #elif _MATCAPBLENDMODE_SCREEN
+                        finalColor = 1-(1-finalColor) * (1-matcap);
+                    #endif
+                #endif
 
                 fixed4 finalRGBA = fixed4(finalColor * 1,0);
                 UNITY_APPLY_FOG(i.fogCoord, finalRGBA);

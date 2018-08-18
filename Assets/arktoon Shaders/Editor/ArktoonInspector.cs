@@ -50,6 +50,7 @@ namespace ArktoonShaders
         MaterialProperty OutlineColor;
         MaterialProperty OutlineTextureColorRate;
         MaterialProperty UseMatcap;
+        MaterialProperty MatcapBlendMode;
         MaterialProperty MatcapBlend;
         MaterialProperty MatcapTexture;
         MaterialProperty MatcapColor;
@@ -72,6 +73,7 @@ namespace ArktoonShaders
         MaterialProperty RimTexture;
         MaterialProperty RimUseBaseTexture;
         MaterialProperty UseShadowCap;
+        MaterialProperty ShadowCapBlendMode;
         MaterialProperty ShadowCapBlend;
         MaterialProperty ShadowCapBlendMask;
         MaterialProperty ShadowCapNormalMix;
@@ -125,6 +127,7 @@ namespace ArktoonShaders
             if(isOpaque || isCutout) OutlineColor = FindProperty("_OutlineColor", props);
             if(isOpaque || isCutout) OutlineTextureColorRate = FindProperty("_OutlineTextureColorRate", props);
             UseMatcap = FindProperty("_UseMatcap", props);
+            MatcapBlendMode = FindProperty("_MatcapBlendMode", props);
             MatcapBlend = FindProperty("_MatcapBlend", props);
             MatcapTexture = FindProperty("_MatcapTexture", props);
             MatcapColor = FindProperty("_MatcapColor", props);
@@ -147,6 +150,7 @@ namespace ArktoonShaders
             RimTexture = FindProperty("_RimTexture", props);
             RimUseBaseTexture = FindProperty("_RimUseBaseTexture", props);
             UseShadowCap = FindProperty("_UseShadowCap", props);
+            ShadowCapBlendMode = FindProperty("_ShadowCapBlendMode", props);
             ShadowCapBlend = FindProperty("_ShadowCapBlend", props);
             ShadowCapBlendMask = FindProperty("_ShadowCapBlendMask", props);
             ShadowCapNormalMix = FindProperty("_ShadowCapNormalMix", props);
@@ -259,6 +263,8 @@ namespace ArktoonShaders
                     var useMatcap = UseMatcap.floatValue;
                     if(useMatcap > 0)
                     {
+
+                        materialEditor.ShaderProperty(MatcapBlendMode,"Blend Mode");
                         materialEditor.ShaderProperty(MatcapBlend,"Blend");
                         materialEditor.ShaderProperty(MatcapBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(MatcapNormalMix, "Normal Map mix");
@@ -314,6 +320,7 @@ namespace ArktoonShaders
                     var useShadowCap = UseShadowCap.floatValue;
                     if(useShadowCap > 0)
                     {
+                        materialEditor.ShaderProperty(ShadowCapBlendMode,"Blend Mode");
                         materialEditor.ShaderProperty(ShadowCapBlend,"Blend");
                         materialEditor.ShaderProperty(ShadowCapBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(ShadowCapNormalMix,"Normal Map mix");
