@@ -21,7 +21,7 @@ namespace ArktoonShaders
         MaterialProperty BaseColor;
         MaterialProperty Normalmap;
         MaterialProperty BumpScale;
-        MaterialProperty Emissionmap;
+        MaterialProperty EmissionMap;
         MaterialProperty EmissionColor;
         MaterialProperty ShadowborderMin;
         MaterialProperty ShadowborderMax;
@@ -94,9 +94,9 @@ namespace ArktoonShaders
             // FindProperties
             BaseTexture = FindProperty("_MainTex", props);
             BaseColor = FindProperty("_Color", props);
-            Normalmap = FindProperty("_Normalmap", props);
+            Normalmap = FindProperty("_BumpMap", props);
             BumpScale = FindProperty("_BumpScale", props);
-            Emissionmap = FindProperty("_Emissionmap", props);
+            EmissionMap = FindProperty("_EmissionMap", props);
             EmissionColor = FindProperty("_EmissionColor", props);
             if(isCutout) CutoutCutoutAdjust = FindProperty("_CutoutCutoutAdjust", props);
             ShadowborderMin = FindProperty("_ShadowborderMin", props);
@@ -164,7 +164,7 @@ namespace ArktoonShaders
                     EditorGUI.indentLevel ++;
                     materialEditor.TexturePropertySingleLine(new GUIContent("Main Texture", "Base Color Texture (RGB)"), BaseTexture, BaseColor);
                     materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map", "Normal Map (RGB)"), Normalmap, BumpScale);
-                    materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"), Emissionmap, EmissionColor);
+                    materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"), EmissionMap, EmissionColor);
                     EditorGUI.indentLevel --;
                 }
 

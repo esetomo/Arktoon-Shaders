@@ -12,9 +12,9 @@ Shader "arktoon/Fade" {
         // Common
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
         _Color ("[Common] Base Color", Color) = (1,1,1,1)
-        _Normalmap ("[Common] Normal map", 2D) = "bump" {}
+        _BumpMap ("[Common] Normal map", 2D) = "bump" {}
         _BumpScale ("[Common] Normal scale", Range(0,2)) = 1
-        _Emissionmap ("[Common] Emission map", 2D) = "white" {}
+        _EmissionMap ("[Common] Emission map", 2D) = "white" {}
         _EmissionColor ("[Common] Emission Color", Color) = (0,0,0,1)
         // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
         _ShadowborderMin ("[Shadow] border Min", Range(0, 1)) = 0.499
@@ -122,9 +122,9 @@ Shader "arktoon/Fade" {
             uniform int _ShadowSteps;
             uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
-            uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
+            uniform sampler2D _BumpMap; uniform float4 _BumpMap_ST;
             uniform float _BumpScale;
-            uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
+            uniform sampler2D _EmissionMap; uniform float4 _EmissionMap_ST;
             uniform float4 _EmissionColor;
             uniform sampler2D _MatcapTexture; uniform float4 _MatcapTexture_ST;
             uniform float _MatcapBlend;
@@ -161,8 +161,8 @@ Shader "arktoon/Fade" {
                 i.normalDir = normalize(i.normalDir);
                 float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
                 float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
-                float3 _Normalmap_var = UnpackScaleNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)), _BumpScale);
-                float3 normalLocal = _Normalmap_var.rgb;
+                float3 _BumpMap_var = UnpackScaleNormal(tex2D(_BumpMap,TRANSFORM_TEX(i.uv0, _BumpMap)), _BumpScale);
+                float3 normalLocal = _BumpMap_var.rgb;
                 float3 normalDirection = normalize(mul( normalLocal, tangentTransform )); // Perturbed normals
                 float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz + float3(0, +0.0000000001, 0));
                 float3 lightColor = _LightColor0.rgb;
@@ -266,8 +266,8 @@ Shader "arktoon/Fade" {
                     float3 RimLight = float3(0,0,0);
                 #endif
 
-                float4 _Emissionmap_var = tex2D(_Emissionmap,TRANSFORM_TEX(i.uv0, _Emissionmap));
-                float3 emissive = max(((_Emissionmap_var.rgb*_EmissionColor.rgb)+matcap),RimLight);
+                float4 _EmissionMap_var = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap));
+                float3 emissive = max(((_EmissionMap_var.rgb*_EmissionColor.rgb)+matcap),RimLight);
                 float3 finalColor = emissive + min(max((ToonedMap+ReflectionMap),Gloss),shadowcap);
                 fixed4 finalRGBA = fixed4(finalColor,(_MainTex_var.a*_Color.a));
                 UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
@@ -305,9 +305,9 @@ Shader "arktoon/Fade" {
 
             uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
-            uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
+            uniform sampler2D _BumpMap; uniform float4 _BumpMap_ST;
             uniform float _BumpScale;
-            uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
+            uniform sampler2D _EmissionMap; uniform float4 _EmissionMap_ST;
             uniform float4 _EmissionColor;
 
             uniform float _RimFresnelPower;
@@ -364,8 +364,8 @@ Shader "arktoon/Fade" {
                 i.normalDir = normalize(i.normalDir);
                 float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
                 float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
-                float3 _Normalmap_var = UnpackScaleNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)), _BumpScale);
-                float3 normalLocal = _Normalmap_var.rgb;
+                float3 _BumpMap_var = UnpackScaleNormal(tex2D(_BumpMap,TRANSFORM_TEX(i.uv0, _BumpMap)), _BumpScale);
+                float3 normalLocal = _BumpMap_var.rgb;
                 float3 normalDirection = normalize(mul( normalLocal, tangentTransform )); // Perturbed normals
 
                 float3 lightDirection = normalize(lerp(_WorldSpaceLightPos0.xyz, _WorldSpaceLightPos0.xyz - i.posWorld.xyz,_WorldSpaceLightPos0.w));
