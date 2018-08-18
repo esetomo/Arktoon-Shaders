@@ -14,6 +14,7 @@ Shader "arktoon/Opaque" {
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
         _Color ("[Common] Base Color", Color) = (1,1,1,1)
         _Normalmap ("[Common] Normal map", 2D) = "bump" {}
+        _BumpScale ("[Common] Normal scale", Range(0,2)) = 1
         _Emissionmap ("[Common] Emission map", 2D) = "white" {}
         _EmissionColor ("[Common] Emission Color", Color) = (0,0,0,1)
         // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
@@ -128,6 +129,7 @@ Shader "arktoon/Opaque" {
             uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
+            uniform float _BumpScale;
             uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
             uniform float4 _EmissionColor;
             uniform sampler2D _MatcapTexture; uniform float4 _MatcapTexture_ST;
@@ -165,7 +167,7 @@ Shader "arktoon/Opaque" {
                 i.normalDir = normalize(i.normalDir);
                 float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
                 float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
-                float3 _Normalmap_var = UnpackNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)));
+                float3 _Normalmap_var = UnpackScaleNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)), _BumpScale);
                 float3 normalLocal = _Normalmap_var.rgb;
                 float3 normalDirection = normalize(mul( normalLocal, tangentTransform )); // Perturbed normals
                 float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz + float3(0, +0.0000000001, 0));
@@ -309,6 +311,7 @@ Shader "arktoon/Opaque" {
             uniform float _PointShadowStrength;
             uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
             uniform sampler2D _Normalmap; uniform float4 _Normalmap_ST;
+            uniform float _BumpScale;
             uniform sampler2D _Emissionmap; uniform float4 _Emissionmap_ST;
             uniform float4 _EmissionColor;
 
@@ -366,7 +369,7 @@ Shader "arktoon/Opaque" {
                 i.normalDir = normalize(i.normalDir);
                 float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
                 float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
-                float3 _Normalmap_var = UnpackNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)));
+                float3 _Normalmap_var = UnpackScaleNormal(tex2D(_Normalmap,TRANSFORM_TEX(i.uv0, _Normalmap)), _BumpScale);
                 float3 normalLocal = _Normalmap_var.rgb;
                 float3 normalDirection = normalize(mul( normalLocal, tangentTransform )); // Perturbed normals
 
