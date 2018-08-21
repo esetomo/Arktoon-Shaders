@@ -18,8 +18,8 @@ Shader "arktoon/Opaque" {
         _EmissionMap ("[Common] Emission map", 2D) = "white" {}
         _EmissionColor ("[Common] Emission Color", Color) = (0,0,0,1)
         // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
-        _ShadowborderMin ("[Shadow] border Min", Range(0, 1)) = 0.499
-        _ShadowborderMax ("[Shadow] border Max", Range(0, 1)) = 0.55
+        _Shadowborder ("[Shadow] border ", Range(0, 1)) = 0.55
+        _ShadowborderBlur ("[Shadow] border Blur", Range(0, 1)) = 0.55
         _ShadowStrength ("[Shadow] Strength", Range(0, 1)) = 0.5
         _ShadowStrengthMask ("[Shadow] Strength Mask", 2D) = "white" {}
         // Shadow steps
@@ -31,7 +31,8 @@ Shader "arktoon/Opaque" {
         // _PointShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
-        [Toggle(USE_SHADOW_MIX)]_ShadowPlanBUseShadowMix ("[Plan B] Use Shadow Mix", Float ) = 0
+        _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
+
         [Toggle(USE_CUSTOM_SHADOW_TEXTURE)] _ShadowPlanBUseCustomShadowTexture ("[Plan B] Use Custom Shadow Texture", Float ) = 0
         _ShadowPlanBHueShiftFromBase ("[Plan B] Hue Shift From Base", Range(-1, 1)) = 0
         _ShadowPlanBSaturationFromBase ("[Plan B] Saturation From Base", Range(0, 2)) = 1
@@ -98,7 +99,6 @@ Shader "arktoon/Opaque" {
 
             CGPROGRAM
             #pragma shader_feature USE_SHADE_TEXTURE
-            #pragma shader_feature USE_SHADOW_MIX
             #pragma shader_feature USE_GLOSS
             #pragma shader_feature USE_MATCAP
             #pragma shader_feature USE_REFLECTION
@@ -123,11 +123,12 @@ Shader "arktoon/Opaque" {
             uniform float4 _Color;
             uniform float _GlossPower;
             uniform float4 _GlossColor;
+            uniform float _ShadowPlanBDefaultShadowMix;
             uniform float _ShadowPlanBHueShiftFromBase;
             uniform float _ShadowPlanBSaturationFromBase;
             uniform float _ShadowPlanBValueFromBase;
-            uniform float _ShadowborderMin;
-            uniform float _ShadowborderMax;
+            uniform float _Shadowborder;
+            uniform float _ShadowborderBlur;
             uniform float _ShadowStrength;
             uniform int _ShadowSteps;
             uniform float _PointShadowStrength;
@@ -207,13 +208,21 @@ Shader "arktoon/Opaque" {
                 float lightDifference = ((topIndirectLighting+grayscalelightcolor)-bottomIndirectLighting);
                 float remappedLight = ((grayscaleDirectLighting-bottomIndirectLighting)/lightDifference);
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
-                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - _ShadowborderMin)) / (_ShadowborderMax - _ShadowborderMin))));
+
+                float ShadowborderMin = max(0, _Shadowborder - _ShadowborderBlur/2);
+                float ShadowborderMax = min(1, _Shadowborder + _ShadowborderBlur/2);
+
+                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - ShadowborderMin)) / (ShadowborderMax - ShadowborderMin))));
 
                 #ifdef USE_SHADOW_STEPS
                     directContribution = min(1,floor(directContribution * _ShadowSteps) / (_ShadowSteps - 1));
                 #endif
 
-                directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * _ShadowStrength;
+                #ifdef USE_SHADE_TEXTURE
+                    directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * 1;
+                #else
+                    directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * _ShadowStrength;
+                #endif
 
                 // 頂点ライティングを処理
 				float3 lightContribution = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
@@ -224,11 +233,7 @@ Shader "arktoon/Opaque" {
                 float3 finalLight = lerp(indirectLighting,directLighting,directContribution)+coloredLight;
 
                 #ifdef USE_SHADE_TEXTURE
-                    #ifdef USE_SHADOW_MIX
-                        float3 shadeMixValue = finalLight;
-                    #else
-                        float3 shadeMixValue = directLighting;
-                    #endif
+                    float3 shadeMixValue = lerp(directLighting, finalLight, _ShadowPlanBDefaultShadowMix);
                     #ifdef USE_CUSTOM_SHADOW_TEXTURE
                         float4 _ShadowPlanBCustomShadowTexture_var = tex2D(_ShadowPlanBCustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanBCustomShadowTexture));
                         float3 shadowCustomTexture = _ShadowPlanBCustomShadowTexture_var.rgb * _ShadowPlanBCustomShadowTextureRGB.rgb;
@@ -237,7 +242,8 @@ Shader "arktoon/Opaque" {
                         float3 Diff_HSV = CalculateHSV(Diffuse, _ShadowPlanBHueShiftFromBase, _ShadowPlanBSaturationFromBase, _ShadowPlanBValueFromBase);
                         float3 ShadeMap = Diff_HSV*shadeMixValue;
                     #endif
-                    float3 ToonedMap = (lerp(ShadeMap,Diffuse*finalLight,finalLight)/1.0);
+                    finalLight = lerp(ShadeMap,directLighting,directContribution)+coloredLight;
+                    float3 ToonedMap = lerp(ShadeMap,Diffuse*finalLight,finalLight);
                 #else
                     float3 ToonedMap = Diffuse*finalLight;
                 #endif

@@ -23,8 +23,8 @@ namespace ArktoonShaders
         MaterialProperty BumpScale;
         MaterialProperty EmissionMap;
         MaterialProperty EmissionColor;
-        MaterialProperty ShadowborderMin;
-        MaterialProperty ShadowborderMax;
+        MaterialProperty Shadowborder;
+        MaterialProperty ShadowborderBlur;
         MaterialProperty ShadowStrength;
         MaterialProperty ShadowUseStep;
         MaterialProperty ShadowSteps;
@@ -32,7 +32,7 @@ namespace ArktoonShaders
         MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
-        MaterialProperty ShadowPlanBUseShadowMix;
+        MaterialProperty ShadowPlanBDefaultShadowMix;
         MaterialProperty ShadowPlanBUseCustomShadowTexture;
         MaterialProperty ShadowPlanBHueShiftFromBase;
         MaterialProperty ShadowPlanBSaturationFromBase;
@@ -101,15 +101,15 @@ namespace ArktoonShaders
             EmissionMap = FindProperty("_EmissionMap", props);
             EmissionColor = FindProperty("_EmissionColor", props);
             if(isCutout) CutoutCutoutAdjust = FindProperty("_CutoutCutoutAdjust", props);
-            ShadowborderMin = FindProperty("_ShadowborderMin", props);
-            ShadowborderMax = FindProperty("_ShadowborderMax", props);
+            Shadowborder = FindProperty("_Shadowborder", props);
+            ShadowborderBlur = FindProperty("_ShadowborderBlur", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
             ShadowUseStep = FindProperty("_ShadowUseStep", props);
             ShadowSteps = FindProperty("_ShadowSteps", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
-            ShadowPlanBUseShadowMix = FindProperty("_ShadowPlanBUseShadowMix", props);
+            ShadowPlanBDefaultShadowMix = FindProperty("_ShadowPlanBDefaultShadowMix", props);
             ShadowPlanBUseCustomShadowTexture = FindProperty("_ShadowPlanBUseCustomShadowTexture", props);
             ShadowPlanBHueShiftFromBase = FindProperty("_ShadowPlanBHueShiftFromBase", props);
             ShadowPlanBSaturationFromBase = FindProperty("_ShadowPlanBSaturationFromBase", props);
@@ -186,9 +186,14 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Shadow", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
-                    materialEditor.ShaderProperty(ShadowborderMin, "Shadow border End");
-                    materialEditor.ShaderProperty(ShadowborderMax, "Shadow border Begin");
-                    materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
+                    materialEditor.ShaderProperty(Shadowborder, "Shadow border");
+                    materialEditor.ShaderProperty(ShadowborderBlur, "Shadow border blur");
+                    if(ShadowPlanBUsePlanB.floatValue > 0)
+                    {
+                        EditorGUILayout.LabelField("Shadow Strength (disabled)");
+                    } else {
+                        materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
+                    }
                     materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength Mask");
                     materialEditor.ShaderProperty(ShadowUseStep, "Use Shadow Steps");
                     var useStep = ShadowUseStep.floatValue;
@@ -202,7 +207,7 @@ namespace ArktoonShaders
                     if(usePlanB > 0)
                     {
                         EditorGUI.indentLevel ++;
-                        materialEditor.ShaderProperty(ShadowPlanBUseShadowMix, "Mix Default Shadow");
+                        materialEditor.ShaderProperty(ShadowPlanBDefaultShadowMix, "Mix Default Shadow");
                         materialEditor.ShaderProperty(ShadowPlanBUseCustomShadowTexture, "Use Shade Texture");
                         var useShadeTexture = ShadowPlanBUseCustomShadowTexture.floatValue;
                         if(useShadeTexture > 0)
