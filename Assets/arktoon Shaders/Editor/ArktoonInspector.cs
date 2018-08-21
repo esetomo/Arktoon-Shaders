@@ -39,6 +39,11 @@ namespace ArktoonShaders
         MaterialProperty ShadowPlanBValueFromBase;
         MaterialProperty ShadowPlanBCustomShadowTexture;
         MaterialProperty ShadowPlanBCustomShadowTextureRGB;
+        MaterialProperty CustomShadow2nd;
+        MaterialProperty ShadowPlanB2borderMin;
+        MaterialProperty ShadowPlanB2borderMax;
+        MaterialProperty ShadowPlanB2CustomShadowTexture;
+        MaterialProperty ShadowPlanB2CustomShadowTextureRGB;
         MaterialProperty UseGloss;
         MaterialProperty GlossBlend;
         MaterialProperty GlossBlendMask;
@@ -116,6 +121,13 @@ namespace ArktoonShaders
             ShadowPlanBValueFromBase = FindProperty("_ShadowPlanBValueFromBase", props);
             ShadowPlanBCustomShadowTexture = FindProperty("_ShadowPlanBCustomShadowTexture", props);
             ShadowPlanBCustomShadowTextureRGB = FindProperty("_ShadowPlanBCustomShadowTextureRGB", props);
+
+            CustomShadow2nd = FindProperty("_CustomShadow2nd", props);
+            ShadowPlanB2borderMin = FindProperty("_ShadowPlanB2borderMin", props);
+            ShadowPlanB2borderMax = FindProperty("_ShadowPlanB2borderMax", props);
+            ShadowPlanB2CustomShadowTexture = FindProperty("_ShadowPlanB2CustomShadowTexture", props);
+            ShadowPlanB2CustomShadowTextureRGB = FindProperty("_ShadowPlanB2CustomShadowTextureRGB", props);
+
             UseGloss = FindProperty("_UseGloss", props);
             GlossBlend = FindProperty("_GlossBlend", props);
             GlossBlendMask = FindProperty("_GlossBlendMask", props);
@@ -220,6 +232,17 @@ namespace ArktoonShaders
                             materialEditor.ShaderProperty(ShadowPlanBHueShiftFromBase, "Hue Shift");
                             materialEditor.ShaderProperty(ShadowPlanBSaturationFromBase, "Saturation");
                             materialEditor.ShaderProperty(ShadowPlanBValueFromBase, "Value");
+                        }
+                        materialEditor.ShaderProperty(CustomShadow2nd, "Use Shade2 Texture");
+                        var customshadow2nd = CustomShadow2nd.floatValue;
+                        if(customshadow2nd > 0)
+                        {
+                            EditorGUI.indentLevel ++;
+                            materialEditor.ShaderProperty(ShadowPlanB2borderMax, "Border End");
+                            materialEditor.ShaderProperty(ShadowPlanB2borderMin, "Border Begin");
+                            materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTexture,  "Shade Texture");
+                            materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTextureRGB,  "Shade Texture RGB");
+                            EditorGUI.indentLevel --;
                         }
                         EditorGUI.indentLevel --;
                     }

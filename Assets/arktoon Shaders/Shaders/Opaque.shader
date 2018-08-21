@@ -32,13 +32,23 @@ Shader "arktoon/Opaque" {
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
-
         [Toggle(USE_CUSTOM_SHADOW_TEXTURE)] _ShadowPlanBUseCustomShadowTexture ("[Plan B] Use Custom Shadow Texture", Float ) = 0
         _ShadowPlanBHueShiftFromBase ("[Plan B] Hue Shift From Base", Range(-1, 1)) = 0
         _ShadowPlanBSaturationFromBase ("[Plan B] Saturation From Base", Range(0, 2)) = 1
         _ShadowPlanBValueFromBase ("[Plan B] Value From Base", Range(0, 2)) = 1
         _ShadowPlanBCustomShadowTexture ("[Plan B] Custom Shadow Texture", 2D) = "black" {}
         _ShadowPlanBCustomShadowTextureRGB ("[Plan B] Custom Shadow Texture RGB", Color) = (1,1,1,1)
+        // ShadowPlanB-2
+        [Toggle(USE_CUSTOM_SHADOW_2ND)]_CustomShadow2nd ("[Plan B-2] CustomShadow2nd", Float ) = 0
+        _ShadowPlanB2border ("[Plan B-2] border ", Range(0, 1)) = 0.55
+        _ShadowPlanB2borderBlur ("[Plan B-2] border Blur", Range(0, 1)) = 0.55
+        [Toggle(USE_CUSTOM_SHADOW_TEXTURE_2ND)] _ShadowPlanB2UseCustomShadowTexture ("[Plan B-2] Use Custom Shadow Texture", Float ) = 0
+        _ShadowPlanB2HueShiftFromBase ("[Plan B-2] Hue Shift From Base", Range(-1, 1)) = 0
+        _ShadowPlanB2SaturationFromBase ("[Plan B-2] Saturation From Base", Range(0, 2)) = 1
+        _ShadowPlanB2ValueFromBase ("[Plan B-2] Value From Base", Range(0, 2)) = 1
+        _ShadowPlanB2CustomShadowTexture ("[Plan B-2] Custom Shadow Texture", 2D) = "black" {}
+        _ShadowPlanB2CustomShadowTextureRGB ("[Plan B-2] Custom Shadow Texture RGB", Color) = (1,1,1,1)
+
         // Gloss
         [Toggle(USE_GLOSS)]_UseGloss ("[Gloss] Enabled", Float) = 0
         _GlossBlend ("[Gloss] Blend", Range(0, 1)) = 1
@@ -106,6 +116,9 @@ Shader "arktoon/Opaque" {
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE
             #pragma shader_feature USE_SHADOW_STEPS
+            #pragma shader_feature USE_CUSTOM_SHADOW_2ND
+            #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE_2ND
+
             #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
@@ -127,6 +140,15 @@ Shader "arktoon/Opaque" {
             uniform float _ShadowPlanBHueShiftFromBase;
             uniform float _ShadowPlanBSaturationFromBase;
             uniform float _ShadowPlanBValueFromBase;
+
+            uniform float _ShadowPlanB2border;
+            uniform float _ShadowPlanB2borderBlur;
+            uniform float _ShadowPlanB2HueShiftFromBase;
+            uniform float _ShadowPlanB2SaturationFromBase;
+            uniform float _ShadowPlanB2ValueFromBase;
+            uniform sampler2D _ShadowPlanB2CustomShadowTexture; uniform float4 _ShadowPlanB2CustomShadowTexture_ST;
+            uniform float4 _ShadowPlanB2CustomShadowTextureRGB;
+
             uniform float _Shadowborder;
             uniform float _ShadowborderBlur;
             uniform float _ShadowStrength;
@@ -242,6 +264,22 @@ Shader "arktoon/Opaque" {
                         float3 Diff_HSV = CalculateHSV(Diffuse, _ShadowPlanBHueShiftFromBase, _ShadowPlanBSaturationFromBase, _ShadowPlanBValueFromBase);
                         float3 ShadeMap = Diff_HSV*shadeMixValue;
                     #endif
+
+                    #ifdef USE_CUSTOM_SHADOW_2ND
+                        float ShadowborderMin2 = max(0, _ShadowPlanB2border - _ShadowPlanB2borderBlur/2);
+                        float ShadowborderMax2 = min(1, _ShadowPlanB2border + _ShadowPlanB2borderBlur/2);
+                        float directContribution2 = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - ShadowborderMin2)) / (ShadowborderMax2 - ShadowborderMin2))));
+                        #ifdef USE_CUSTOM_SHADOW_TEXTURE_2ND
+                            float4 _ShadowPlanB2CustomShadowTexture_var = tex2D(_ShadowPlanB2CustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanB2CustomShadowTexture));
+                            float3 shadowCustomTexture2 = _ShadowPlanB2CustomShadowTexture_var.rgb * _ShadowPlanB2CustomShadowTextureRGB.rgb;
+                            float3 ShadeMap2 = shadowCustomTexture*shadeMixValue;
+                        #else
+                            float3 Diff_HSV2 = CalculateHSV(Diffuse, _ShadowPlanB2HueShiftFromBase, _ShadowPlanB2SaturationFromBase, _ShadowPlanB2ValueFromBase);
+                            float3 ShadeMap2 = Diff_HSV*shadeMixValue;
+                        #endif
+                        ShadeMap = lerp(ShadeMap2,ShadeMap,directContribution2);
+                    #endif
+
                     finalLight = lerp(ShadeMap,directLighting,directContribution)+coloredLight;
                     float3 ToonedMap = lerp(ShadeMap,Diffuse*finalLight,finalLight);
                 #else
