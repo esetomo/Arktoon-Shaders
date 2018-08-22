@@ -272,10 +272,10 @@ Shader "arktoon/Opaque" {
                         #ifdef USE_CUSTOM_SHADOW_TEXTURE_2ND
                             float4 _ShadowPlanB2CustomShadowTexture_var = tex2D(_ShadowPlanB2CustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanB2CustomShadowTexture));
                             float3 shadowCustomTexture2 = _ShadowPlanB2CustomShadowTexture_var.rgb * _ShadowPlanB2CustomShadowTextureRGB.rgb;
-                            float3 ShadeMap2 = shadowCustomTexture*shadeMixValue;
+                            float3 ShadeMap2 = shadowCustomTexture2*shadeMixValue;
                         #else
                             float3 Diff_HSV2 = CalculateHSV(Diffuse, _ShadowPlanB2HueShiftFromBase, _ShadowPlanB2SaturationFromBase, _ShadowPlanB2ValueFromBase);
-                            float3 ShadeMap2 = Diff_HSV*shadeMixValue;
+                            float3 ShadeMap2 = Diff_HSV2*shadeMixValue;
                         #endif
                         ShadeMap = lerp(ShadeMap2,ShadeMap,directContribution2);
                     #endif

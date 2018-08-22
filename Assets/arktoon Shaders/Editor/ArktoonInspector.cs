@@ -40,8 +40,12 @@ namespace ArktoonShaders
         MaterialProperty ShadowPlanBCustomShadowTexture;
         MaterialProperty ShadowPlanBCustomShadowTextureRGB;
         MaterialProperty CustomShadow2nd;
-        MaterialProperty ShadowPlanB2borderMin;
-        MaterialProperty ShadowPlanB2borderMax;
+        MaterialProperty ShadowPlanB2border;
+        MaterialProperty ShadowPlanB2borderBlur;
+        MaterialProperty ShadowPlanB2HueShiftFromBase;
+        MaterialProperty ShadowPlanB2SaturationFromBase;
+        MaterialProperty ShadowPlanB2ValueFromBase;
+        MaterialProperty ShadowPlanB2UseCustomShadowTexture;
         MaterialProperty ShadowPlanB2CustomShadowTexture;
         MaterialProperty ShadowPlanB2CustomShadowTextureRGB;
         MaterialProperty UseGloss;
@@ -123,8 +127,13 @@ namespace ArktoonShaders
             ShadowPlanBCustomShadowTextureRGB = FindProperty("_ShadowPlanBCustomShadowTextureRGB", props);
 
             CustomShadow2nd = FindProperty("_CustomShadow2nd", props);
-            ShadowPlanB2borderMin = FindProperty("_ShadowPlanB2borderMin", props);
-            ShadowPlanB2borderMax = FindProperty("_ShadowPlanB2borderMax", props);
+
+            ShadowPlanB2border = FindProperty("_ShadowPlanB2border", props);
+            ShadowPlanB2borderBlur = FindProperty("_ShadowPlanB2borderBlur", props);
+            ShadowPlanB2HueShiftFromBase = FindProperty("_ShadowPlanB2HueShiftFromBase", props);
+            ShadowPlanB2SaturationFromBase = FindProperty("_ShadowPlanB2SaturationFromBase", props);
+            ShadowPlanB2ValueFromBase = FindProperty("_ShadowPlanB2ValueFromBase", props);
+            ShadowPlanB2UseCustomShadowTexture = FindProperty("_ShadowPlanB2UseCustomShadowTexture", props);
             ShadowPlanB2CustomShadowTexture = FindProperty("_ShadowPlanB2CustomShadowTexture", props);
             ShadowPlanB2CustomShadowTextureRGB = FindProperty("_ShadowPlanB2CustomShadowTextureRGB", props);
 
@@ -233,15 +242,24 @@ namespace ArktoonShaders
                             materialEditor.ShaderProperty(ShadowPlanBSaturationFromBase, "Saturation");
                             materialEditor.ShaderProperty(ShadowPlanBValueFromBase, "Value");
                         }
-                        materialEditor.ShaderProperty(CustomShadow2nd, "Use Shade2 Texture");
+                        materialEditor.ShaderProperty(CustomShadow2nd, "Use 2nd Shade ");
                         var customshadow2nd = CustomShadow2nd.floatValue;
                         if(customshadow2nd > 0)
                         {
                             EditorGUI.indentLevel ++;
-                            materialEditor.ShaderProperty(ShadowPlanB2borderMax, "Border End");
-                            materialEditor.ShaderProperty(ShadowPlanB2borderMin, "Border Begin");
-                            materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTexture,  "Shade Texture");
-                            materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTextureRGB,  "Shade Texture RGB");
+                            materialEditor.ShaderProperty(ShadowPlanB2border, "ShadowPlanB2border");
+                            materialEditor.ShaderProperty(ShadowPlanB2borderBlur, "ShadowPlanB2borderBlur");
+                            materialEditor.ShaderProperty(ShadowPlanB2UseCustomShadowTexture, "Use Shade Texture");
+                            var useShadeTexture2 = ShadowPlanB2UseCustomShadowTexture.floatValue;
+                            if(useShadeTexture2 > 0)
+                            {
+                                materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTexture,  "Shade Texture");
+                                materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTextureRGB,  "Shade Texture RGB");
+                            }else{
+                                materialEditor.ShaderProperty(ShadowPlanB2HueShiftFromBase, "ShadowPlanB2HueShiftFromBase");
+                                materialEditor.ShaderProperty(ShadowPlanB2SaturationFromBase, "ShadowPlanB2SaturationFromBase");
+                                materialEditor.ShaderProperty(ShadowPlanB2ValueFromBase, "ShadowPlanB2ValueFromBase");
+                            }
                             EditorGUI.indentLevel --;
                         }
                         EditorGUI.indentLevel --;
