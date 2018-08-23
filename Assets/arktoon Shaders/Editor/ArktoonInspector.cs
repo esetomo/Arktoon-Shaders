@@ -207,16 +207,16 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Shadow", EditorStyles.boldLabel);
                 {
                     EditorGUI.indentLevel ++;
-                    materialEditor.ShaderProperty(Shadowborder, "Shadow border");
-                    materialEditor.ShaderProperty(ShadowborderBlur, "Shadow border blur");
+                    materialEditor.ShaderProperty(Shadowborder, "Border pos");
+                    materialEditor.ShaderProperty(ShadowborderBlur, "Border blur");
                     if(ShadowPlanBUsePlanB.floatValue > 0)
                     {
-                        EditorGUILayout.LabelField("Shadow Strength (disabled)");
+                        EditorGUILayout.LabelField("Strength"," (disabled)", EditorStyles.centeredGreyMiniLabel);
                     } else {
-                        materialEditor.ShaderProperty(ShadowStrength, "Shadow Strength");
+                        materialEditor.ShaderProperty(ShadowStrength, "Strength");
                     }
-                    materialEditor.ShaderProperty(ShadowStrengthMask, "Shadow Strength Mask");
-                    materialEditor.ShaderProperty(ShadowUseStep, "Use Shadow Steps");
+                    materialEditor.ShaderProperty(ShadowStrengthMask, "Strength Mask");
+                    materialEditor.ShaderProperty(ShadowUseStep, "Use Steps");
                     var useStep = ShadowUseStep.floatValue;
                     if(useStep > 0)
                     {
@@ -227,8 +227,11 @@ namespace ArktoonShaders
                     var usePlanB = ShadowPlanBUsePlanB.floatValue;
                     if(usePlanB > 0)
                     {
+
                         EditorGUI.indentLevel ++;
-                        materialEditor.ShaderProperty(ShadowPlanBDefaultShadowMix, "Mix Default Shadow");
+                        materialEditor.ShaderProperty(ShadowPlanBDefaultShadowMix, "Mix Default Shade");
+                        EditorGUILayout.LabelField("1st shade", EditorStyles.boldLabel);
+                        EditorGUI.indentLevel ++;
                         materialEditor.ShaderProperty(ShadowPlanBUseCustomShadowTexture, "Use Shade Texture");
                         var useShadeTexture = ShadowPlanBUseCustomShadowTexture.floatValue;
                         if(useShadeTexture > 0)
@@ -242,13 +245,15 @@ namespace ArktoonShaders
                             materialEditor.ShaderProperty(ShadowPlanBSaturationFromBase, "Saturation");
                             materialEditor.ShaderProperty(ShadowPlanBValueFromBase, "Value");
                         }
-                        materialEditor.ShaderProperty(CustomShadow2nd, "Use 2nd Shade ");
+                        EditorGUI.indentLevel --;
+                        EditorGUILayout.LabelField("2nd shade", EditorStyles.boldLabel);
+                        EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(CustomShadow2nd, "Use");
                         var customshadow2nd = CustomShadow2nd.floatValue;
                         if(customshadow2nd > 0)
                         {
-                            EditorGUI.indentLevel ++;
-                            materialEditor.ShaderProperty(ShadowPlanB2border, "ShadowPlanB2border");
-                            materialEditor.ShaderProperty(ShadowPlanB2borderBlur, "ShadowPlanB2borderBlur");
+                            materialEditor.ShaderProperty(ShadowPlanB2border, "Border pos");
+                            materialEditor.ShaderProperty(ShadowPlanB2borderBlur, "Border blur");
                             materialEditor.ShaderProperty(ShadowPlanB2UseCustomShadowTexture, "Use Shade Texture");
                             var useShadeTexture2 = ShadowPlanB2UseCustomShadowTexture.floatValue;
                             if(useShadeTexture2 > 0)
@@ -256,12 +261,13 @@ namespace ArktoonShaders
                                 materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTexture,  "Shade Texture");
                                 materialEditor.ShaderProperty(ShadowPlanB2CustomShadowTextureRGB,  "Shade Texture RGB");
                             }else{
-                                materialEditor.ShaderProperty(ShadowPlanB2HueShiftFromBase, "ShadowPlanB2HueShiftFromBase");
-                                materialEditor.ShaderProperty(ShadowPlanB2SaturationFromBase, "ShadowPlanB2SaturationFromBase");
-                                materialEditor.ShaderProperty(ShadowPlanB2ValueFromBase, "ShadowPlanB2ValueFromBase");
+                                materialEditor.ShaderProperty(ShadowPlanB2HueShiftFromBase, "Hue Shift");
+                                materialEditor.ShaderProperty(ShadowPlanB2SaturationFromBase, "Saturation");
+                                materialEditor.ShaderProperty(ShadowPlanB2ValueFromBase, "Value");
                             }
-                            EditorGUI.indentLevel --;
                         }
+
+                        EditorGUI.indentLevel --;
                         EditorGUI.indentLevel --;
                     }
                     EditorGUI.indentLevel --;

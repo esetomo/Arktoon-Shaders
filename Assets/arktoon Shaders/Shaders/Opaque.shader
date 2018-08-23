@@ -266,8 +266,8 @@ Shader "arktoon/Opaque" {
                     #endif
 
                     #ifdef USE_CUSTOM_SHADOW_2ND
-                        float ShadowborderMin2 = max(0, _ShadowPlanB2border - _ShadowPlanB2borderBlur/2);
-                        float ShadowborderMax2 = min(1, _ShadowPlanB2border + _ShadowPlanB2borderBlur/2);
+                        float ShadowborderMin2 = max(0, (_ShadowPlanB2border * _Shadowborder) - _ShadowPlanB2borderBlur/2);
+                        float ShadowborderMax2 = min(1, (_ShadowPlanB2border * _Shadowborder) + _ShadowPlanB2borderBlur/2);
                         float directContribution2 = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - ShadowborderMin2)) / (ShadowborderMax2 - ShadowborderMin2))));
                         #ifdef USE_CUSTOM_SHADOW_TEXTURE_2ND
                             float4 _ShadowPlanB2CustomShadowTexture_var = tex2D(_ShadowPlanB2CustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanB2CustomShadowTexture));
