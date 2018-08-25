@@ -25,7 +25,7 @@ Shader "arktoon/Fade" {
         [Toggle(USE_SHADOW_STEPS)]_ShadowUseStep ("[Shadow] use step", Float ) = 0
         _ShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
-        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.25
+        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = １
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
