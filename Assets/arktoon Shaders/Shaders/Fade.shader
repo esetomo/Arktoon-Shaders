@@ -25,7 +25,7 @@ Shader "arktoon/Fade" {
         [Toggle(USE_SHADOW_STEPS)]_ShadowUseStep ("[Shadow] use step", Float ) = 0
         _ShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
-        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = １
+        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 1
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
@@ -232,11 +232,13 @@ Shader "arktoon/Fade" {
                 float ShadowborderMin = max(0, _Shadowborder - _ShadowborderBlur/2);
                 float ShadowborderMax = min(1, _Shadowborder + _ShadowborderBlur/2);
 
-                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - ShadowborderMin)) / (ShadowborderMax - ShadowborderMin))));
+                float grayscaleDirectLighting2 = (((dot(lightDirection,normalDirection)*0.5+0.5)*grayscalelightcolor) + dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
+                float remappedLight2 = ((grayscaleDirectLighting2-bottomIndirectLighting)/lightDifference);
+                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight2) - ShadowborderMin)) / (ShadowborderMax - ShadowborderMin))));
 
                 float selfShade = saturate(dot(lightDirection,normalDirection)+1+_OtherShadowAdjust);
                 float otherShadow = saturate(saturate((attenuation-0.5)*2)+(1-selfShade)*_OtherShadowBorderSharpness);
-                directContribution = lerp(0, directContribution, saturate(1-((1-otherShadow) * saturate(dot(lightColor,grayscale_for_light())))));
+                directContribution = lerp(0, directContribution, saturate(1-((1-otherShadow) * saturate(dot(lightColor,grayscale_for_light())*1.5))));
 
                 #ifdef USE_SHADOW_STEPS
                     directContribution = min(1,floor(directContribution * _ShadowSteps) / (_ShadowSteps - 1));
@@ -270,7 +272,7 @@ Shader "arktoon/Fade" {
                     #ifdef USE_CUSTOM_SHADOW_2ND
                         float ShadowborderMin2 = max(0, (_ShadowPlanB2border * _Shadowborder) - _ShadowPlanB2borderBlur/2);
                         float ShadowborderMax2 = min(1, (_ShadowPlanB2border * _Shadowborder) + _ShadowPlanB2borderBlur/2);
-                        float directContribution2 = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - ShadowborderMin2)) / (ShadowborderMax2 - ShadowborderMin2))));
+                        float directContribution2 = 1.0 - ((1.0 - saturate(( (saturate((remappedLight+remappedLight2)/2) - ShadowborderMin2)) / (ShadowborderMax2 - ShadowborderMin2))));  // /2の部分をパラメーターにしたい
                         #ifdef USE_CUSTOM_SHADOW_TEXTURE_2ND
                             float4 _ShadowPlanB2CustomShadowTexture_var = tex2D(_ShadowPlanB2CustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanB2CustomShadowTexture));
                             float3 shadowCustomTexture2 = _ShadowPlanB2CustomShadowTexture_var.rgb * _ShadowPlanB2CustomShadowTextureRGB.rgb;
