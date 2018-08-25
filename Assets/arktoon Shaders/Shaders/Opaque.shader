@@ -194,7 +194,6 @@ Shader "arktoon/Opaque" {
                 float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
                 float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
 
-
                 float3 ShadeSH9Minus = ShadeSH9Indirect();
                 float3 indirectLighting = saturate(ShadeSH9Minus);
                 float3 ShadeSH9Plus = ShadeSH9Direct();

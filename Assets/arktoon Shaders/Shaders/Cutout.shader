@@ -200,13 +200,17 @@ Shader "arktoon/AlphaCutout" {
                 float3 directLighting = saturate((ShadeSH9Plus+lightColor));
                 float3 grayscale_vector = grayscale_vector_node();
                 float grayscalelightcolor = dot(lightColor,grayscale_vector);
-                float grayscaleDirectLighting = ((dot(lightDirection,normalDirection)*grayscalelightcolor*attenuation)+dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
+                float grayscaleDirectLighting = (((dot(lightDirection,normalDirection)*0.5+0.5)*grayscalelightcolor*attenuation)+dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
                 float bottomIndirectLighting = dot(ShadeSH9Minus,grayscale_vector);
                 float topIndirectLighting = dot(ShadeSH9Plus,grayscale_vector);
                 float lightDifference = ((topIndirectLighting+grayscalelightcolor)-bottomIndirectLighting);
                 float remappedLight = ((grayscaleDirectLighting-bottomIndirectLighting)/lightDifference);
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
                 float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - _ShadowborderMin)) / (_ShadowborderMax - _ShadowborderMin))));
+
+                float selfShade = max(0,min(1,(dot(lightDirection,normalDirection)+1)));
+                float otherShadow = saturate((attenuation))+saturate(1-selfShade);
+                directContribution = lerp(0, directContribution, saturate(1-((1-otherShadow) * saturate(dot(lightColor,grayscale_for_light())))));
 
                 #ifdef USE_SHADOW_STEPS
                     directContribution = min(1,floor(directContribution * _ShadowSteps) / (_ShadowSteps - 1));
