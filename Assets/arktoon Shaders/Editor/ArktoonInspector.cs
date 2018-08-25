@@ -90,7 +90,11 @@ namespace ArktoonShaders
         MaterialProperty ShadowCapColor;
         MaterialProperty Cull;
         MaterialProperty ZWrite;
+        MaterialProperty OtherShadowBorderSharpness;
+        MaterialProperty OtherShadowAdjust;
         #endregion
+
+        bool _isOpenAdvance;
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] props)
         {
@@ -178,6 +182,8 @@ namespace ArktoonShaders
             ShadowCapTexture = FindProperty("_ShadowCapTexture", props);
             ShadowCapColor = FindProperty("_ShadowCapColor", props);
             Cull = FindProperty("_Cull", props);
+            OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
+            OtherShadowAdjust = FindProperty("_OtherShadowAdjust", props);
             if(isFade) ZWrite = FindProperty("_ZWrite", props);
 
             EditorGUIUtility.labelWidth = 0f;
@@ -190,6 +196,8 @@ namespace ArktoonShaders
                     materialEditor.TexturePropertySingleLine(new GUIContent("Main Texture", "Base Color Texture (RGB)"), BaseTexture, BaseColor);
                     materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map", "Normal Map (RGB)"), Normalmap, BumpScale);
                     materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"), EmissionMap, EmissionColor);
+                    materialEditor.ShaderProperty(Cull, "Cull");
+                    if(isFade) materialEditor.ShaderProperty(ZWrite, "ZWrite");
                     EditorGUI.indentLevel --;
                 }
 
@@ -384,14 +392,25 @@ namespace ArktoonShaders
 
                 EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox("These are some shade tweaking. no need to change usually." + Environment.NewLine + "ほとんどのケースで触る必要のないやつら。",MessageType.Info);
+                if (GUILayout.Button("Revert advanced params.")){
+                    PointShadowStrength.floatValue = 1.0f;
+                    OtherShadowAdjust.floatValue = -0.1f;
+                    OtherShadowBorderSharpness.floatValue = 3;
+                }
                 {
                     EditorGUI.indentLevel ++;
-                    materialEditor.ShaderProperty(Cull, "Cull");
-                    if(isFade) materialEditor.ShaderProperty(ZWrite, "ZWrite");
                     EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
-                        materialEditor.ShaderProperty(PointShadowStrength, "Strength");
+                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:1.0)");
+                        EditorGUI.indentLevel --;
+                    }
+                    EditorGUILayout.LabelField("Shade from other meshes", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(OtherShadowAdjust, "Adjust (def:-0.1)");
+                        materialEditor.ShaderProperty(OtherShadowBorderSharpness, "Sharpness(def:3)");
                         EditorGUI.indentLevel --;
                     }
                     EditorGUI.indentLevel --;

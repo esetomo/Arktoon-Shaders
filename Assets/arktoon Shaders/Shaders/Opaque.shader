@@ -8,8 +8,6 @@ Shader "arktoon/Opaque" {
     Properties {
         // Culling
         [Enum(UnityEngine.Rendering.CullMode)]_Cull("[Advanced] Cull", Float) = 2 // Back
-        // test roughness map
-        // _RoughnessMap ("[Common] Base Texture", 2D) = "white" {}
         // Common
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
         _Color ("[Common] Base Color", Color) = (1,1,1,1)
@@ -18,8 +16,8 @@ Shader "arktoon/Opaque" {
         _EmissionMap ("[Common] Emission map", 2D) = "white" {}
         _EmissionColor ("[Common] Emission Color", Color) = (0,0,0,1)
         // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
-        _Shadowborder ("[Shadow] border ", Range(0, 1)) = 0.55
-        _ShadowborderBlur ("[Shadow] border Blur", Range(0, 1)) = 0.55
+        _Shadowborder ("[Shadow] border ", Range(0, 1)) = 0.6
+        _ShadowborderBlur ("[Shadow] border Blur", Range(0, 1)) = 0.05
         _ShadowStrength ("[Shadow] Strength", Range(0, 1)) = 0.5
         _ShadowStrengthMask ("[Shadow] Strength Mask", 2D) = "white" {}
         // Shadow steps
@@ -27,8 +25,6 @@ Shader "arktoon/Opaque" {
         _ShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
         _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.25
-        // [Toggle(USE_POINT_SHADOW_STEPS)]_PointShadowUseStep ("[Shadow] use step", Float ) = 0
-        // _PointShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
@@ -95,6 +91,9 @@ Shader "arktoon/Opaque" {
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
         _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
+        // advanced tweaking
+        _OtherShadowAdjust ("[Advanced] Other Mesh Shadow Adjust", Range(-0.2, 0.2)) = -0.1
+        _OtherShadowBorderSharpness ("[Advanced] Other Mesh Shadow Border Sharpness", Range(1, 5)) = 3
     }
     SubShader {
         Tags {
@@ -187,7 +186,8 @@ Shader "arktoon/Opaque" {
             uniform float _ShadowCapBlend;
             uniform float4 _ShadowCapColor;
             uniform float _ShadowCapNormalMix;
-
+            uniform float _OtherShadowAdjust;
+            uniform float _OtherShadowBorderSharpness;
             // vert は arklude.cginc に移動
 
             float4 frag(VertexOutput i) : COLOR {
@@ -235,8 +235,8 @@ Shader "arktoon/Opaque" {
 
                 float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - ShadowborderMin)) / (ShadowborderMax - ShadowborderMin))));
 
-                float selfShade = max(0,min(1,(dot(lightDirection,normalDirection)+1)));
-                float otherShadow = saturate((attenuation))+saturate(1-selfShade);
+                float selfShade = saturate(dot(lightDirection,normalDirection)+1+_OtherShadowAdjust);
+                float otherShadow = saturate(saturate((attenuation-0.5)*2)+(1-selfShade)*_OtherShadowBorderSharpness);
                 directContribution = lerp(0, directContribution, saturate(1-((1-otherShadow) * saturate(dot(lightColor,grayscale_for_light())))));
 
                 #ifdef USE_SHADOW_STEPS
