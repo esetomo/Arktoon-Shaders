@@ -18,24 +18,35 @@ Shader "arktoon/AlphaCutout" {
         // Cutout
         _CutoutCutoutAdjust ("Cutout Border Adjust", Range(0, 1)) = 0.5
         // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
-        _ShadowborderMin ("[Shadow] border Min", Range(0, 1)) = 0.499
-        _ShadowborderMax ("[Shadow] border Max", Range(0, 1)) = 0.55
+        _Shadowborder ("[Shadow] border ", Range(0, 1)) = 0.6
+        _ShadowborderBlur ("[Shadow] border Blur", Range(0, 1)) = 0.05
         _ShadowStrength ("[Shadow] Strength", Range(0, 1)) = 0.5
         _ShadowStrengthMask ("[Shadow] Strength Mask", 2D) = "white" {}
         // Shadow steps
         [Toggle(USE_SHADOW_STEPS)]_ShadowUseStep ("[Shadow] use step", Float ) = 0
         _ShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
-        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.25
+        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 1
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
-        [Toggle(USE_SHADOW_MIX)]_ShadowPlanBUseShadowMix ("[Plan B] Use Shadow Mix", Float ) = 0
+        _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
         [Toggle(USE_CUSTOM_SHADOW_TEXTURE)] _ShadowPlanBUseCustomShadowTexture ("[Plan B] Use Custom Shadow Texture", Float ) = 0
         _ShadowPlanBHueShiftFromBase ("[Plan B] Hue Shift From Base", Range(-1, 1)) = 0
         _ShadowPlanBSaturationFromBase ("[Plan B] Saturation From Base", Range(0, 2)) = 1
         _ShadowPlanBValueFromBase ("[Plan B] Value From Base", Range(0, 2)) = 1
         _ShadowPlanBCustomShadowTexture ("[Plan B] Custom Shadow Texture", 2D) = "black" {}
         _ShadowPlanBCustomShadowTextureRGB ("[Plan B] Custom Shadow Texture RGB", Color) = (1,1,1,1)
+        // ShadowPlanB-2
+        [Toggle(USE_CUSTOM_SHADOW_2ND)]_CustomShadow2nd ("[Plan B-2] CustomShadow2nd", Float ) = 0
+        _ShadowPlanB2border ("[Plan B-2] border ", Range(0, 1)) = 0.55
+        _ShadowPlanB2borderBlur ("[Plan B-2] border Blur", Range(0, 1)) = 0.55
+        [Toggle(USE_CUSTOM_SHADOW_TEXTURE_2ND)] _ShadowPlanB2UseCustomShadowTexture ("[Plan B-2] Use Custom Shadow Texture", Float ) = 0
+        _ShadowPlanB2HueShiftFromBase ("[Plan B-2] Hue Shift From Base", Range(-1, 1)) = 0
+        _ShadowPlanB2SaturationFromBase ("[Plan B-2] Saturation From Base", Range(0, 2)) = 1
+        _ShadowPlanB2ValueFromBase ("[Plan B-2] Value From Base", Range(0, 2)) = 1
+        _ShadowPlanB2CustomShadowTexture ("[Plan B-2] Custom Shadow Texture", 2D) = "black" {}
+        _ShadowPlanB2CustomShadowTextureRGB ("[Plan B-2] Custom Shadow Texture RGB", Color) = (1,1,1,1)
+
         // Gloss
         [Toggle(USE_GLOSS)]_UseGloss ("[Gloss] Enabled", Float) = 0
         _GlossBlend ("[Gloss] Blend", Range(0, 1)) = 1
@@ -82,6 +93,9 @@ Shader "arktoon/AlphaCutout" {
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
         _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
+        // advanced tweaking
+        _OtherShadowAdjust ("[Advanced] Other Mesh Shadow Adjust", Range(-0.2, 0.2)) = -0.1
+        _OtherShadowBorderSharpness ("[Advanced] Other Mesh Shadow Border Sharpness", Range(1, 5)) = 3
     }
     SubShader {
         Tags {
@@ -96,7 +110,6 @@ Shader "arktoon/AlphaCutout" {
 
             CGPROGRAM
             #pragma shader_feature USE_SHADE_TEXTURE
-            #pragma shader_feature USE_SHADOW_MIX
             #pragma shader_feature USE_GLOSS
             #pragma shader_feature USE_MATCAP
             #pragma shader_feature USE_REFLECTION
@@ -104,6 +117,9 @@ Shader "arktoon/AlphaCutout" {
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE
             #pragma shader_feature USE_SHADOW_STEPS
+            #pragma shader_feature USE_CUSTOM_SHADOW_2ND
+            #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE_2ND
+
             #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
@@ -122,11 +138,21 @@ Shader "arktoon/AlphaCutout" {
             uniform float _GlossPower;
             uniform float4 _GlossColor;
             uniform float _CutoutCutoutAdjust;
+            uniform float _ShadowPlanBDefaultShadowMix;
             uniform float _ShadowPlanBHueShiftFromBase;
             uniform float _ShadowPlanBSaturationFromBase;
             uniform float _ShadowPlanBValueFromBase;
-            uniform float _ShadowborderMin;
-            uniform float _ShadowborderMax;
+
+            uniform float _ShadowPlanB2border;
+            uniform float _ShadowPlanB2borderBlur;
+            uniform float _ShadowPlanB2HueShiftFromBase;
+            uniform float _ShadowPlanB2SaturationFromBase;
+            uniform float _ShadowPlanB2ValueFromBase;
+            uniform sampler2D _ShadowPlanB2CustomShadowTexture; uniform float4 _ShadowPlanB2CustomShadowTexture_ST;
+            uniform float4 _ShadowPlanB2CustomShadowTextureRGB;
+
+            uniform float _Shadowborder;
+            uniform float _ShadowborderBlur;
             uniform float _ShadowStrength;
             uniform int _ShadowSteps;
             uniform float _PointShadowStrength;
@@ -163,6 +189,8 @@ Shader "arktoon/AlphaCutout" {
             uniform float _ShadowCapBlend;
             uniform float4 _ShadowCapColor;
             uniform float _ShadowCapNormalMix;
+            uniform float _OtherShadowAdjust;
+            uniform float _OtherShadowBorderSharpness;
 
             // vert は arklude.cginc に移動
 
@@ -200,19 +228,33 @@ Shader "arktoon/AlphaCutout" {
                 float3 directLighting = saturate((ShadeSH9Plus+lightColor));
                 float3 grayscale_vector = grayscale_vector_node();
                 float grayscalelightcolor = dot(lightColor,grayscale_vector);
-                float grayscaleDirectLighting = ((dot(lightDirection,normalDirection)*grayscalelightcolor*attenuation)+dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
+                float grayscaleDirectLighting = (((dot(lightDirection,normalDirection)*0.5+0.5)*grayscalelightcolor*attenuation)+dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
                 float bottomIndirectLighting = dot(ShadeSH9Minus,grayscale_vector);
                 float topIndirectLighting = dot(ShadeSH9Plus,grayscale_vector);
                 float lightDifference = ((topIndirectLighting+grayscalelightcolor)-bottomIndirectLighting);
                 float remappedLight = ((grayscaleDirectLighting-bottomIndirectLighting)/lightDifference);
                 float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
-                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight) - _ShadowborderMin)) / (_ShadowborderMax - _ShadowborderMin))));
+
+                float ShadowborderMin = max(0, _Shadowborder - _ShadowborderBlur/2);
+                float ShadowborderMax = min(1, _Shadowborder + _ShadowborderBlur/2);
+
+                float grayscaleDirectLighting2 = (((dot(lightDirection,normalDirection)*0.5+0.5)*grayscalelightcolor) + dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
+                float remappedLight2 = ((grayscaleDirectLighting2-bottomIndirectLighting)/lightDifference);
+                float directContribution = 1.0 - ((1.0 - saturate(( (saturate(remappedLight2) - ShadowborderMin)) / (ShadowborderMax - ShadowborderMin))));
+
+                float selfShade = saturate(dot(lightDirection,normalDirection)+1+_OtherShadowAdjust);
+                float otherShadow = saturate(saturate((attenuation-0.5)*2)+(1-selfShade)*_OtherShadowBorderSharpness);
+                directContribution = lerp(0, directContribution, saturate(1-((1-otherShadow) * saturate(dot(lightColor,grayscale_for_light())*1.5))));
 
                 #ifdef USE_SHADOW_STEPS
                     directContribution = min(1,floor(directContribution * _ShadowSteps) / (_ShadowSteps - 1));
                 #endif
 
-                directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * _ShadowStrength;
+                #ifdef USE_SHADE_TEXTURE
+                    directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * 1;
+                #else
+                	directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * _ShadowStrength;
+                #endif
 
                 // 頂点ライティングを処理
 				float3 lightContribution = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
@@ -223,11 +265,7 @@ Shader "arktoon/AlphaCutout" {
                 float3 finalLight = lerp(indirectLighting,directLighting,directContribution)+coloredLight;
 
                 #ifdef USE_SHADE_TEXTURE
-                    #ifdef USE_SHADOW_MIX
-                        float3 shadeMixValue = finalLight;
-                    #else
-                        float3 shadeMixValue = directLighting;
-                    #endif
+                    float3 shadeMixValue = lerp(directLighting, finalLight, _ShadowPlanBDefaultShadowMix);
                     #ifdef USE_CUSTOM_SHADOW_TEXTURE
                         float4 _ShadowPlanBCustomShadowTexture_var = tex2D(_ShadowPlanBCustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanBCustomShadowTexture));
                         float3 shadowCustomTexture = _ShadowPlanBCustomShadowTexture_var.rgb * _ShadowPlanBCustomShadowTextureRGB.rgb;
@@ -236,7 +274,24 @@ Shader "arktoon/AlphaCutout" {
                         float3 Diff_HSV = CalculateHSV(Diffuse, _ShadowPlanBHueShiftFromBase, _ShadowPlanBSaturationFromBase, _ShadowPlanBValueFromBase);
                         float3 ShadeMap = Diff_HSV*shadeMixValue;
                     #endif
-                    float3 ToonedMap = (lerp(ShadeMap,Diffuse*finalLight,finalLight)/1.0);
+
+                    #ifdef USE_CUSTOM_SHADOW_2ND
+                        float ShadowborderMin2 = max(0, (_ShadowPlanB2border * _Shadowborder) - _ShadowPlanB2borderBlur/2);
+                        float ShadowborderMax2 = min(1, (_ShadowPlanB2border * _Shadowborder) + _ShadowPlanB2borderBlur/2);
+                        float directContribution2 = 1.0 - ((1.0 - saturate(( (saturate((remappedLight+remappedLight2)/2) - ShadowborderMin2)) / (ShadowborderMax2 - ShadowborderMin2))));  // /2の部分をパラメーターにしたい
+                        #ifdef USE_CUSTOM_SHADOW_TEXTURE_2ND
+                            float4 _ShadowPlanB2CustomShadowTexture_var = tex2D(_ShadowPlanB2CustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanB2CustomShadowTexture));
+                            float3 shadowCustomTexture2 = _ShadowPlanB2CustomShadowTexture_var.rgb * _ShadowPlanB2CustomShadowTextureRGB.rgb;
+                            float3 ShadeMap2 = shadowCustomTexture2*shadeMixValue;
+                        #else
+                            float3 Diff_HSV2 = CalculateHSV(Diffuse, _ShadowPlanB2HueShiftFromBase, _ShadowPlanB2SaturationFromBase, _ShadowPlanB2ValueFromBase);
+                            float3 ShadeMap2 = Diff_HSV2*shadeMixValue;
+                        #endif
+                        ShadeMap = lerp(ShadeMap2,ShadeMap,directContribution2);
+                    #endif
+
+                    finalLight = lerp(ShadeMap,directLighting,directContribution)+coloredLight;
+                    float3 ToonedMap = lerp(ShadeMap,Diffuse*finalLight,finalLight);
                 #else
                     float3 ToonedMap = Diffuse*finalLight;
                 #endif
