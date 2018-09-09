@@ -29,6 +29,8 @@ namespace ArktoonShaders
         MaterialProperty ShadowUseStep;
         MaterialProperty ShadowSteps;
         MaterialProperty PointShadowStrength;
+        MaterialProperty PointShadowborder;
+        MaterialProperty PointShadowborderBlur;
         MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
@@ -120,6 +122,8 @@ namespace ArktoonShaders
             ShadowUseStep = FindProperty("_ShadowUseStep", props);
             ShadowSteps = FindProperty("_ShadowSteps", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
+            PointShadowborder = FindProperty("_PointShadowborder", props);
+            PointShadowborderBlur= FindProperty("_PointShadowborderBlur", props);
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
             ShadowPlanBDefaultShadowMix = FindProperty("_ShadowPlanBDefaultShadowMix", props);
@@ -403,7 +407,9 @@ namespace ArktoonShaders
                     EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
-                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:1.0)");
+                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:0.5)");
+                        materialEditor.ShaderProperty(PointShadowborder, "Border (def:0)");
+                        materialEditor.ShaderProperty(PointShadowborderBlur, "Border blur (def:0.05)");
                         EditorGUI.indentLevel --;
                     }
                     EditorGUILayout.LabelField("Shade from other meshes", EditorStyles.boldLabel);
