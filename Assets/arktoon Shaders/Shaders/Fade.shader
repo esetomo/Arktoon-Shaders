@@ -28,6 +28,8 @@ Shader "arktoon/Fade" {
         _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.5
         _PointShadowborder ("[PointShadow] border ", Range(0, 1)) = 0
         _PointShadowborderBlur ("[PointShadow] border Blur", Range(0, 1)) = 0.05
+        [Toggle(USE_POINT_SHADOW_STEPS)]_PointShadowUseStep ("[PointShadow] use step", Float ) = 0
+        _PointShadowSteps("[PointShadow] steps between borders", Range(2, 10)) = 2
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
@@ -115,6 +117,7 @@ Shader "arktoon/Fade" {
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE
             #pragma shader_feature USE_SHADOW_STEPS
+            #pragma shader_feature USE_POINT_SHADOW_STEPS
             #pragma shader_feature USE_CUSTOM_SHADOW_2ND
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE_2ND
 
@@ -147,6 +150,7 @@ Shader "arktoon/Fade" {
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_RIM
             #pragma shader_feature USE_MATCAP
+            #pragma shader_feature USE_POINT_SHADOW_STEPS
             #pragma multi_compile _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
