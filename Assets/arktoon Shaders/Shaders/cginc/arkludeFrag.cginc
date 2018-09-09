@@ -21,6 +21,8 @@ uniform float _ShadowborderBlur;
 uniform float _ShadowStrength;
 uniform int _ShadowSteps;
 uniform float _PointShadowStrength;
+uniform float _PointShadowborder;
+uniform float _PointShadowborderBlur;
 uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
 uniform sampler2D _BumpMap; uniform float4 _BumpMap_ST;
 uniform float _BumpScale;
@@ -122,10 +124,13 @@ float4 frag(VertexOutput i) : COLOR {
     #endif
 
     // 頂点ライティングを処理
-    float3 lightContribution = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
-    float3 directContributionVertex = (1.0 - (1.0 - saturate(saturate(lightContribution))));
-    float3 finalVertexLight = saturate(directContributionVertex + (1 - (_PointShadowStrength * _ShadowStrengthMask_var)));
-    float3 coloredLight = lightContribution;
+
+    float VertexShadowborderMin = max(0, _PointShadowborder - _PointShadowborderBlur/2.0f);
+    float VertexShadowborderMax = min(1, _PointShadowborder + _PointShadowborderBlur/2.0f);
+    float3 lightContribution3 = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
+    float lightContribution = max(max(lightContribution3.r, lightContribution3.g), lightContribution3.b);
+    float3 directContributionVertex = 1.0 - ((1.0 - saturate(( (saturate(lightContribution) - VertexShadowborderMin)) / (VertexShadowborderMax - VertexShadowborderMin))));
+    float3 coloredLight = directContributionVertex * lightContribution3;
 
     float3 finalLight = lerp(indirectLighting,directLighting,directContribution)+coloredLight;
 

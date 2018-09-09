@@ -427,7 +427,9 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
                 EditorGUILayout.HelpBox("These are some shade tweaking. no need to change usually." + Environment.NewLine + "ほとんどのケースで触る必要のないやつら。",MessageType.Info);
                 if (GUILayout.Button("Revert advanced params.")){
-                    PointShadowStrength.floatValue = 1.0f;
+                    PointShadowStrength.floatValue = 1f;
+                    PointShadowborder.floatValue = 0.25f;
+                    PointShadowborderBlur.floatValue = 0.1f;
                     OtherShadowAdjust.floatValue = -0.1f;
                     OtherShadowBorderSharpness.floatValue = 3;
                 }
@@ -436,9 +438,9 @@ namespace ArktoonShaders
                     EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
-                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:0.5)");
-                        materialEditor.ShaderProperty(PointShadowborder, "Border (def:0)");
-                        materialEditor.ShaderProperty(PointShadowborderBlur, "Border blur (def:0.05)");
+                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:1)");
+                        materialEditor.ShaderProperty(PointShadowborder, "Border (def:0.25)");
+                        materialEditor.ShaderProperty(PointShadowborderBlur, "Border blur (def:0.1)");
                         EditorGUI.indentLevel --;
                     }
                     EditorGUILayout.LabelField("Shade from other meshes", EditorStyles.boldLabel);
