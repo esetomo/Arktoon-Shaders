@@ -4,11 +4,10 @@
 //
 // 本コードおよびリポジトリ（https://github.com/synqark/Arktoon-Shader) は MIT License を使用して公開しています。
 // 詳細はLICENSEか、https://opensource.org/licenses/mit-license.php を参照してください。
-Shader "arktoon/Fade" {
+Shader "arktoon/Stencil/Reader" {
     Properties {
         // Culling
         [Enum(UnityEngine.Rendering.CullMode)]_Cull("[Advanced] Cull", Float) = 2 // Back
-        [Enum(Off, 0, On, 1)]_ZWrite("ZWrite", Float) = 0
         // Common
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
         _Color ("[Common] Base Color", Color) = (1,1,1,1)
@@ -54,6 +53,12 @@ Shader "arktoon/Fade" {
         _GlossBlendMask ("[Gloss] Blend Mask", 2D) = "white" {}
         _GlossPower ("[Gloss] Power", Range(0, 1)) = 0.5
         _GlossColor ("[Gloss] Color", Color) = (1,1,1,1)
+        // Outline
+        [Toggle(USE_OUTLINE)]_UseOutline ("[Outline] Enabled", Float) = 0
+        _OutlineWidth ("[Outline] Width", Range(0, 0.03)) = 0.0005
+        _OutlineWidthMask ("[Outline] Width Mask", 2D) = "white" {}
+        _OutlineColor ("[Outline] Color", Color) = (0,0,0,1)
+        _OutlineTextureColorRate ("[Outline] Texture Color Rate", Range(0, 1)) = 0.05
         // MatCap
         [Toggle(USE_MATCAP)]_UseMatcap ("[MatCap] Enabled", Float) = 0
         [KeywordEnum(Add, Lighten, Screen)] _MatcapBlendMode ("[MatCap] Blend Mode", Float) = 0
@@ -88,14 +93,17 @@ Shader "arktoon/Fade" {
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
         _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
+        // Stencil(Reader)
+        _StencilNumber ("[StencilReader] Number", int) = 5
+        [Enum(UnityEngine.Rendering.CompareFunction)] _StencilCompareAction ("[StencilReader] Compare Action", int) = 6
         // advanced tweaking
         _OtherShadowAdjust ("[Advanced] Other Mesh Shadow Adjust", Range(-0.2, 0.2)) = -0.1
         _OtherShadowBorderSharpness ("[Advanced] Other Mesh Shadow Border Sharpness", Range(1, 5)) = 3
     }
     SubShader {
         Tags {
-            "Queue"="Transparent"
-            "RenderType"="Transparent"
+            "Queue"="AlphaTest"
+            "RenderType"="Opaque"
         }
         Pass {
             Name "FORWARD"
@@ -103,8 +111,11 @@ Shader "arktoon/Fade" {
                 "LightMode"="ForwardBase"
             }
             Cull [_Cull]
-            Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite [_ZWrite]
+
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
 
             CGPROGRAM
             #pragma shader_feature USE_SHADE_TEXTURE
@@ -123,11 +134,10 @@ Shader "arktoon/Fade" {
 
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_fwdbase
+            #pragma multi_compile_fwdbase_fullshadows
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            #define ARKTOON_FADE
 
             #include "cginc/arkludeVertOther.cginc"
             #include "cginc/arkludeFrag.cginc"
@@ -140,7 +150,11 @@ Shader "arktoon/Fade" {
             }
             Cull [_Cull]
             Blend One One
-            ZWrite [_ZWrite]
+
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
 
             CGPROGRAM
             #pragma shader_feature USE_GLOSS
@@ -152,13 +166,84 @@ Shader "arktoon/Fade" {
 
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_fwdadd
+            #pragma multi_compile_fwdadd_fullshadows
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            #define ARKTOON_FADE
 
             #include "cginc/arkludeAdd.cginc"
+            ENDCG
+        }
+
+        Pass {
+            Name "Outline"
+            Tags {
+            }
+            Cull Front
+
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
+
+            CGPROGRAM
+            #pragma shader_feature USE_OUTLINE
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma fragmentoption ARB_precision_hint_fastest
+            #pragma multi_compile_shadowcaster
+            #pragma multi_compile_fog
+            #pragma only_renderers d3d9 d3d11 glcore gles
+            #pragma target 3.0
+
+            #include "cginc/arkludeOutline.cginc"
+            ENDCG
+        }
+
+        Pass {
+            Name "ShadowCaster"
+            Tags {
+                "LightMode"="ShadowCaster"
+            }
+            Offset 1, 1
+            Cull [_Cull]
+
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "UnityCG.cginc"
+            #include "Lighting.cginc"
+            #pragma fragmentoption ARB_precision_hint_fastest
+            #pragma multi_compile_shadowcaster
+            #pragma multi_compile_fog
+            #pragma only_renderers d3d9 d3d11 glcore gles
+            #pragma target 3.0
+            uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
+            uniform float4 _Color;
+            struct VertexInput {
+                float4 vertex : POSITION;
+                float2 texcoord0 : TEXCOORD0;
+            };
+            struct VertexOutput {
+                V2F_SHADOW_CASTER;
+                float2 uv0 : TEXCOORD1;
+            };
+            VertexOutput vert (VertexInput v) {
+                VertexOutput o = (VertexOutput)0;
+                o.uv0 = v.texcoord0;
+                o.pos = UnityObjectToClipPos( v.vertex );
+                TRANSFER_SHADOW_CASTER(o)
+                return o;
+            }
+            float4 frag(VertexOutput i) : COLOR {
+                float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
+                SHADOW_CASTER_FRAGMENT(i)
+            }
             ENDCG
         }
     }

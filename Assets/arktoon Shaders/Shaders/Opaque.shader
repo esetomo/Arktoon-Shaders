@@ -99,6 +99,7 @@ Shader "arktoon/Opaque" {
     }
     SubShader {
         Tags {
+			"Queue"="Geometry"
             "RenderType"="Opaque"
         }
         Pass {
@@ -130,9 +131,8 @@ Shader "arktoon/Opaque" {
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
 
-            #include "arkludeVertOther.cginc"
-            #include "arkludeFrag.cginc"
-
+            #include "cginc/arkludeVertOther.cginc"
+            #include "cginc/arkludeFrag.cginc"
             ENDCG
         }
         Pass {
@@ -158,8 +158,7 @@ Shader "arktoon/Opaque" {
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
 
-            #include "arkludeAdd.cginc"
-
+            #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
 
@@ -179,8 +178,7 @@ Shader "arktoon/Opaque" {
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
 
-            #include "arkludeOutline.cginc"
-
+            #include "cginc/arkludeOutline.cginc"
             ENDCG
         }
     }

@@ -90,6 +90,8 @@ namespace ArktoonShaders
         MaterialProperty ShadowCapNormalMix;
         MaterialProperty ShadowCapTexture;
         MaterialProperty ShadowCapColor;
+        MaterialProperty StencilNumber;
+        MaterialProperty StencilCompareAction;
         MaterialProperty Cull;
         MaterialProperty ZWrite;
         MaterialProperty OtherShadowBorderSharpness;
@@ -107,6 +109,8 @@ namespace ArktoonShaders
             bool isOpaque = shader.name.Contains("Opaque");
             bool isFade = shader.name.Contains("Fade");
             bool isCutout = shader.name.Contains("AlphaCutout");
+            bool isStencilWriter = shader.name.Contains("Stencil/Writer");
+            bool isStencilReader = shader.name.Contains("Stencil/Reader");
 
             // FindProperties
             BaseTexture = FindProperty("_MainTex", props);
@@ -185,6 +189,8 @@ namespace ArktoonShaders
             ShadowCapNormalMix = FindProperty("_ShadowCapNormalMix", props);
             ShadowCapTexture = FindProperty("_ShadowCapTexture", props);
             ShadowCapColor = FindProperty("_ShadowCapColor", props);
+            if(isStencilWriter || isStencilReader) StencilNumber = FindProperty("_StencilNumber", props);
+            if(isStencilReader) StencilCompareAction = FindProperty("_StencilCompareAction", props);
             Cull = FindProperty("_Cull", props);
             OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
             OtherShadowAdjust = FindProperty("_OtherShadowAdjust", props);
@@ -392,6 +398,29 @@ namespace ArktoonShaders
                         materialEditor.ShaderProperty(ShadowCapColor,"Color");
                     }
                     EditorGUI.indentLevel--;
+                }
+
+                if(isStencilWriter)
+                {
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                    EditorGUILayout.LabelField("Stencil Writer", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel++;
+                        materialEditor.ShaderProperty(StencilNumber,"Number");
+                        EditorGUI.indentLevel--;
+                    }
+                }
+
+                if(isStencilReader)
+                {
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                    EditorGUILayout.LabelField("Stencil Reader", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel++;
+                        materialEditor.ShaderProperty(StencilNumber,"Number");
+                        materialEditor.ShaderProperty(StencilCompareAction,"Compare Action");
+                        EditorGUI.indentLevel--;
+                    }
                 }
 
                 EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);

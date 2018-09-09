@@ -101,7 +101,9 @@ Shader "arktoon/AlphaCutout" {
     }
     SubShader {
         Tags {
-            "RenderType"="Opaque"
+            "Queue"="AlphaTest"
+            "RenderType" = "TransparentCutout"
+            "IgnoreProjector"="True"
         }
         Pass {
             Name "FORWARD"
@@ -132,8 +134,9 @@ Shader "arktoon/AlphaCutout" {
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
             #define ARKTOON_CUTOUT
-            #include "arkludeVertOther.cginc"
-            #include "arkludeFrag.cginc"
+
+            #include "cginc/arkludeVertOther.cginc"
+            #include "cginc/arkludeFrag.cginc"
             ENDCG
         }
         Pass {
@@ -160,7 +163,7 @@ Shader "arktoon/AlphaCutout" {
             #pragma target 3.0
             #define ARKTOON_CUTOUT
 
-            #include "arkludeAdd.cginc"
+            #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
 
@@ -181,8 +184,7 @@ Shader "arktoon/AlphaCutout" {
             #pragma target 3.0
             #define ARKTOON_CUTOUT
 
-            #include "arkludeOutline.cginc"
-
+            #include "cginc/arkludeOutline.cginc"
             ENDCG
         }
         Pass {
