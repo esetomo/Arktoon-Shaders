@@ -124,7 +124,6 @@ float4 frag(VertexOutput i) : COLOR {
     #endif
 
     // 頂点ライティングを処理
-
     float VertexShadowborderMin = max(0, _PointShadowborder - _PointShadowborderBlur/2.0f);
     float VertexShadowborderMax = min(1, _PointShadowborder + _PointShadowborderBlur/2.0f);
     float3 lightContribution3 = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
