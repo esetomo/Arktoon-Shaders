@@ -4,7 +4,7 @@
 //
 // 本コードおよびリポジトリ（https://github.com/synqark/Arktoon-Shader) は MIT License を使用して公開しています。
 // 詳細はLICENSEか、https://opensource.org/licenses/mit-license.php を参照してください。
-Shader "arktoon/AlphaCutout" {
+Shader "arktoon/Stencil/Reader" {
     Properties {
         // Culling
         [Enum(UnityEngine.Rendering.CullMode)]_Cull("[Advanced] Cull", Float) = 2 // Back
@@ -15,8 +15,6 @@ Shader "arktoon/AlphaCutout" {
         _BumpScale ("[Common] Normal scale", Range(0,2)) = 1
         _EmissionMap ("[Common] Emission map", 2D) = "white" {}
         _EmissionColor ("[Common] Emission Color", Color) = (0,0,0,1)
-        // Cutout
-        _CutoutCutoutAdjust ("Cutout Border Adjust", Range(0, 1)) = 0.5
         // Shadow (received from DirectionalLight, other Indirect(baked) Lights, including SH)
         _Shadowborder ("[Shadow] border ", Range(0, 1)) = 0.6
         _ShadowborderBlur ("[Shadow] border Blur", Range(0, 1)) = 0.05
@@ -29,8 +27,6 @@ Shader "arktoon/AlphaCutout" {
         _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.5
         _PointShadowborder ("[PointShadow] border ", Range(0, 1)) = 0
         _PointShadowborderBlur ("[PointShadow] border Blur", Range(0, 1)) = 0.05
-        [Toggle(USE_POINT_SHADOW_STEPS)]_PointShadowUseStep ("[PointShadow] use step", Float ) = 0
-        _PointShadowSteps("[PointShadow] steps between borders", Range(2, 10)) = 2
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
@@ -97,6 +93,9 @@ Shader "arktoon/AlphaCutout" {
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
         _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
+        // Stencil(Reader)
+        _StencilNumber ("[StencilReader] Number", int) = 5
+        [Enum(UnityEngine.Rendering.CompareFunction)] _StencilCompareAction ("[StencilReader] Compare Action", int) = 6
         // advanced tweaking
         _OtherShadowAdjust ("[Advanced] Other Mesh Shadow Adjust", Range(-0.2, 0.2)) = -0.1
         _OtherShadowBorderSharpness ("[Advanced] Other Mesh Shadow Border Sharpness", Range(1, 5)) = 3
@@ -104,8 +103,7 @@ Shader "arktoon/AlphaCutout" {
     SubShader {
         Tags {
             "Queue"="AlphaTest"
-            "RenderType" = "TransparentCutout"
-            "IgnoreProjector"="True"
+            "RenderType"="Opaque"
         }
         Pass {
             Name "FORWARD"
@@ -113,6 +111,11 @@ Shader "arktoon/AlphaCutout" {
                 "LightMode"="ForwardBase"
             }
             Cull [_Cull]
+
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
 
             CGPROGRAM
             #pragma shader_feature USE_SHADE_TEXTURE
@@ -123,7 +126,6 @@ Shader "arktoon/AlphaCutout" {
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE
             #pragma shader_feature USE_SHADOW_STEPS
-            #pragma shader_feature USE_POINT_SHADOW_STEPS
             #pragma shader_feature USE_CUSTOM_SHADOW_2ND
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE_2ND
 
@@ -136,7 +138,6 @@ Shader "arktoon/AlphaCutout" {
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            #define ARKTOON_CUTOUT
 
             #include "cginc/arkludeVertOther.cginc"
             #include "cginc/arkludeFrag.cginc"
@@ -150,12 +151,16 @@ Shader "arktoon/AlphaCutout" {
             Cull [_Cull]
             Blend One One
 
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
+
             CGPROGRAM
             #pragma shader_feature USE_GLOSS
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_RIM
             #pragma shader_feature USE_MATCAP
-            #pragma shader_feature USE_POINT_SHADOW_STEPS
             #pragma multi_compile _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
@@ -165,7 +170,6 @@ Shader "arktoon/AlphaCutout" {
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            #define ARKTOON_CUTOUT
 
             #include "cginc/arkludeAdd.cginc"
             ENDCG
@@ -177,6 +181,11 @@ Shader "arktoon/AlphaCutout" {
             }
             Cull Front
 
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
+
             CGPROGRAM
             #pragma shader_feature USE_OUTLINE
             #pragma vertex vert
@@ -186,11 +195,11 @@ Shader "arktoon/AlphaCutout" {
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            #define ARKTOON_CUTOUT
 
             #include "cginc/arkludeOutline.cginc"
             ENDCG
         }
+
         Pass {
             Name "ShadowCaster"
             Tags {
@@ -198,6 +207,11 @@ Shader "arktoon/AlphaCutout" {
             }
             Offset 1, 1
             Cull [_Cull]
+
+            Stencil {
+                Ref [_StencilNumber]
+                Comp [_StencilCompareAction]
+            }
 
             CGPROGRAM
             #pragma vertex vert
@@ -209,7 +223,6 @@ Shader "arktoon/AlphaCutout" {
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 3.0
-            uniform float _CutoutCutoutAdjust;
             uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
             uniform float4 _Color;
             struct VertexInput {
@@ -229,7 +242,6 @@ Shader "arktoon/AlphaCutout" {
             }
             float4 frag(VertexOutput i) : COLOR {
                 float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
-                clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
                 SHADOW_CASTER_FRAGMENT(i)
             }
             ENDCG

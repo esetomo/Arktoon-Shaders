@@ -1,3 +1,7 @@
+#include "UnityCG.cginc"
+#include "AutoLight.cginc"
+#include "Lighting.cginc"
+
 float3 ShadeSH9Indirect(){
     return ShadeSH9(half4(0.0, -1.0, 0.0, 1.0));
 }

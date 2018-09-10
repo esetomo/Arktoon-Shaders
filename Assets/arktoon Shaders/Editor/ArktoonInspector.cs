@@ -29,6 +29,10 @@ namespace ArktoonShaders
         MaterialProperty ShadowUseStep;
         MaterialProperty ShadowSteps;
         MaterialProperty PointShadowStrength;
+        MaterialProperty PointShadowborder;
+        MaterialProperty PointShadowborderBlur;
+        MaterialProperty PointShadowUseStep;
+        MaterialProperty PointShadowSteps;
         MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
@@ -88,6 +92,8 @@ namespace ArktoonShaders
         MaterialProperty ShadowCapNormalMix;
         MaterialProperty ShadowCapTexture;
         MaterialProperty ShadowCapColor;
+        MaterialProperty StencilNumber;
+        MaterialProperty StencilCompareAction;
         MaterialProperty Cull;
         MaterialProperty ZWrite;
         MaterialProperty OtherShadowBorderSharpness;
@@ -105,6 +111,8 @@ namespace ArktoonShaders
             bool isOpaque = shader.name.Contains("Opaque");
             bool isFade = shader.name.Contains("Fade");
             bool isCutout = shader.name.Contains("AlphaCutout");
+            bool isStencilWriter = shader.name.Contains("Stencil/Writer");
+            bool isStencilReader = shader.name.Contains("Stencil/Reader");
 
             // FindProperties
             BaseTexture = FindProperty("_MainTex", props);
@@ -120,6 +128,10 @@ namespace ArktoonShaders
             ShadowUseStep = FindProperty("_ShadowUseStep", props);
             ShadowSteps = FindProperty("_ShadowSteps", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
+            PointShadowborder = FindProperty("_PointShadowborder", props);
+            PointShadowborderBlur= FindProperty("_PointShadowborderBlur", props);
+            PointShadowUseStep = FindProperty("_PointShadowUseStep", props);
+            PointShadowSteps = FindProperty("_PointShadowSteps", props);
             ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
             ShadowPlanBDefaultShadowMix = FindProperty("_ShadowPlanBDefaultShadowMix", props);
@@ -181,6 +193,8 @@ namespace ArktoonShaders
             ShadowCapNormalMix = FindProperty("_ShadowCapNormalMix", props);
             ShadowCapTexture = FindProperty("_ShadowCapTexture", props);
             ShadowCapColor = FindProperty("_ShadowCapColor", props);
+            if(isStencilWriter || isStencilReader) StencilNumber = FindProperty("_StencilNumber", props);
+            if(isStencilReader) StencilCompareAction = FindProperty("_StencilCompareAction", props);
             Cull = FindProperty("_Cull", props);
             OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
             OtherShadowAdjust = FindProperty("_OtherShadowAdjust", props);
@@ -390,20 +404,56 @@ namespace ArktoonShaders
                     EditorGUI.indentLevel--;
                 }
 
+                if(isStencilWriter)
+                {
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                    EditorGUILayout.LabelField("Stencil Writer", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel++;
+                        materialEditor.ShaderProperty(StencilNumber,"Number");
+                        EditorGUI.indentLevel--;
+                    }
+                }
+
+                if(isStencilReader)
+                {
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                    EditorGUILayout.LabelField("Stencil Reader", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel++;
+                        materialEditor.ShaderProperty(StencilNumber,"Number");
+                        materialEditor.ShaderProperty(StencilCompareAction,"Compare Action");
+                        EditorGUI.indentLevel--;
+                    }
+                }
+
                 EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
                 EditorGUILayout.HelpBox("These are some shade tweaking. no need to change usually." + Environment.NewLine + "ほとんどのケースで触る必要のないやつら。",MessageType.Info);
                 if (GUILayout.Button("Revert advanced params.")){
-                    PointShadowStrength.floatValue = 1.0f;
+                    PointShadowStrength.floatValue = 1f;
+                    PointShadowborder.floatValue = 0.25f;
+                    PointShadowborderBlur.floatValue = 0.1f;
                     OtherShadowAdjust.floatValue = -0.1f;
                     OtherShadowBorderSharpness.floatValue = 3;
+                    PointShadowUseStep.floatValue = 0;
+                    material.DisableKeyword("USE_POINT_SHADOW_STEPS");
+                    PointShadowSteps.floatValue = 2;
                 }
                 {
                     EditorGUI.indentLevel ++;
                     EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
-                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:1.0)");
+                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:1)");
+                        materialEditor.ShaderProperty(PointShadowborder, "Border (def:0.25)");
+                        materialEditor.ShaderProperty(PointShadowborderBlur, "Border blur (def:0.1)");
+                        materialEditor.ShaderProperty(PointShadowUseStep, "Use Steps");
+                        var usePointStep = PointShadowUseStep.floatValue;
+                        if(usePointStep > 0)
+                        {
+                            materialEditor.ShaderProperty(PointShadowSteps, " ");
+                        }
                         EditorGUI.indentLevel --;
                     }
                     EditorGUILayout.LabelField("Shade from other meshes", EditorStyles.boldLabel);
