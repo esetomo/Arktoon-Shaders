@@ -70,9 +70,8 @@ float4 frag(VertexOutput i) : COLOR {
     float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz + float3(0, +0.0000000001, 0));
     float3 lightColor = _LightColor0.rgb;
     float3 halfDirection = normalize(viewDirection+lightDirection);
-////// Lighting:
+
     UNITY_LIGHT_ATTENUATION(attenuation,i, i.posWorld.xyz);
-////// Emissive:
 
     #ifdef USE_SHADOWCAP
         float3 normalDirectionShadowCap = normalize(mul( float3(normalLocal.r*_ShadowCapNormalMix,normalLocal.g*_ShadowCapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals

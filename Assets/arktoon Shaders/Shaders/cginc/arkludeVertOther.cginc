@@ -105,8 +105,8 @@ struct VertexOutput {
     float3 bitangentDir : TEXCOORD4;
     float3 ambient : TEXCOORD6;
     float3 ambientAtten : TEXCOORD7;
-    LIGHTING_COORDS(5,6)
-    UNITY_FOG_COORDS(7)
+    LIGHTING_COORDS(8,9)
+    UNITY_FOG_COORDS(10)
 };
 VertexOutput vert (VertexInput v) {
     VertexOutput o = (VertexOutput)0;
@@ -119,7 +119,7 @@ VertexOutput vert (VertexInput v) {
     UNITY_TRANSFER_FOG(o,o.pos);
     TRANSFER_VERTEX_TO_FRAGMENT(o)
 
-    // 頂点ライティングが必要ば場合に取得
+    // 頂点ライティングが必要な場合に取得
     #if UNITY_SHOULD_SAMPLE_SH
         #if defined(VERTEXLIGHT_ON)
             o.ambient = Shade4PointLights(
