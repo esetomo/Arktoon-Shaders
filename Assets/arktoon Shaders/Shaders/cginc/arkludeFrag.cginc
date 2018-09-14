@@ -19,6 +19,7 @@ uniform float4 _ShadowPlanB2CustomShadowTextureRGB;
 uniform float _Shadowborder;
 uniform float _ShadowborderBlur;
 uniform float _ShadowStrength;
+uniform float _ShadowIndirectIntensity;
 uniform int _ShadowSteps;
 uniform float _PointShadowStrength;
 uniform float _PointShadowborder;
@@ -60,6 +61,19 @@ uniform float _ShadowCapNormalMix;
 uniform float _OtherShadowAdjust;
 uniform float _OtherShadowBorderSharpness;
 
+// SH変数群から最大光量を取得
+half3 GetSHLength ()
+{
+    half3 x, x1;
+    x.r = length(unity_SHAr);
+    x.g = length(unity_SHAg);
+    x.b = length(unity_SHAb);
+    x1.r = length(unity_SHBr);
+    x1.g = length(unity_SHBg);
+    x1.b = length(unity_SHBb);
+    return x + x1;
+}
+
 float4 frag(VertexOutput i) : COLOR {
     i.normalDir = normalize(i.normalDir);
     float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
@@ -89,10 +103,12 @@ float4 frag(VertexOutput i) : COLOR {
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
     #endif
 
-    float3 ShadeSH9Minus = ShadeSH9Indirect();
-    float3 indirectLighting = saturate(ShadeSH9Minus);
-    float3 ShadeSH9Plus = ShadeSH9Direct();
+    float3 ShadeSH9Plus = GetSHLength();
     float3 directLighting = saturate((ShadeSH9Plus+lightColor));
+    float3 ShadeSH9Minus = ShadeSH9(float4(0,0,0,1));
+    ShadeSH9Minus *= _ShadowIndirectIntensity;
+    float3 indirectLighting = saturate(ShadeSH9Minus);
+
     float3 grayscale_vector = grayscale_vector_node();
     float grayscalelightcolor = dot(lightColor,grayscale_vector);
     float grayscaleDirectLighting = (((dot(lightDirection,normalDirection)*0.5+0.5)*grayscalelightcolor*attenuation)+dot(ShadeSH9Normal( normalDirection ),grayscale_vector));

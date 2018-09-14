@@ -26,6 +26,8 @@ namespace ArktoonShaders
         MaterialProperty Shadowborder;
         MaterialProperty ShadowborderBlur;
         MaterialProperty ShadowStrength;
+        MaterialProperty ShadowStrengthMask;
+        MaterialProperty ShadowIndirectIntensity;
         MaterialProperty ShadowUseStep;
         MaterialProperty ShadowSteps;
         MaterialProperty PointShadowStrength;
@@ -33,7 +35,6 @@ namespace ArktoonShaders
         MaterialProperty PointShadowborderBlur;
         MaterialProperty PointShadowUseStep;
         MaterialProperty PointShadowSteps;
-        MaterialProperty ShadowStrengthMask;
         MaterialProperty CutoutCutoutAdjust;
         MaterialProperty ShadowPlanBUsePlanB;
         MaterialProperty ShadowPlanBDefaultShadowMix;
@@ -125,6 +126,8 @@ namespace ArktoonShaders
             Shadowborder = FindProperty("_Shadowborder", props);
             ShadowborderBlur = FindProperty("_ShadowborderBlur", props);
             ShadowStrength = FindProperty("_ShadowStrength", props);
+            ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
+            ShadowIndirectIntensity = FindProperty("_ShadowIndirectIntensity", props);
             ShadowUseStep = FindProperty("_ShadowUseStep", props);
             ShadowSteps = FindProperty("_ShadowSteps", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
@@ -132,7 +135,6 @@ namespace ArktoonShaders
             PointShadowborderBlur= FindProperty("_PointShadowborderBlur", props);
             PointShadowUseStep = FindProperty("_PointShadowUseStep", props);
             PointShadowSteps = FindProperty("_PointShadowSteps", props);
-            ShadowStrengthMask = FindProperty("_ShadowStrengthMask", props);
             ShadowPlanBUsePlanB = FindProperty("_ShadowPlanBUsePlanB", props);
             ShadowPlanBDefaultShadowMix = FindProperty("_ShadowPlanBDefaultShadowMix", props);
             ShadowPlanBUseCustomShadowTexture = FindProperty("_ShadowPlanBUseCustomShadowTexture", props);
@@ -439,9 +441,16 @@ namespace ArktoonShaders
                     PointShadowUseStep.floatValue = 0;
                     material.DisableKeyword("USE_POINT_SHADOW_STEPS");
                     PointShadowSteps.floatValue = 2;
+                    ShadowIndirectIntensity.floatValue = 0.25f;
                 }
                 {
                     EditorGUI.indentLevel ++;
+                    EditorGUILayout.LabelField("Directional Shadow", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(ShadowIndirectIntensity, "Indirect face Intensity (0.25)");
+                        EditorGUI.indentLevel --;
+                    }
                     EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
