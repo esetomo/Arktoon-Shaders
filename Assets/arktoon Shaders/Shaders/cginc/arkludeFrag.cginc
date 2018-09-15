@@ -19,6 +19,7 @@ uniform float4 _ShadowPlanB2CustomShadowTextureRGB;
 uniform float _Shadowborder;
 uniform float _ShadowborderBlur;
 uniform float _ShadowStrength;
+uniform float _ShadowIndirectIntensity;
 uniform int _ShadowSteps;
 uniform float _PointShadowStrength;
 uniform float _PointShadowborder;
@@ -57,8 +58,23 @@ uniform sampler2D _ShadowCapBlendMask; uniform float4 _ShadowCapBlendMask_ST;
 uniform float _ShadowCapBlend;
 uniform float4 _ShadowCapColor;
 uniform float _ShadowCapNormalMix;
+uniform float _VertexColorBlendDiffuse;
+uniform float _VertexColorBlendEmissive;
 uniform float _OtherShadowAdjust;
 uniform float _OtherShadowBorderSharpness;
+
+// SH変数群から最大光量を取得
+half3 GetSHLength ()
+{
+    half3 x, x1;
+    x.r = length(unity_SHAr);
+    x.g = length(unity_SHAg);
+    x.b = length(unity_SHAb);
+    x1.r = length(unity_SHBr);
+    x1.g = length(unity_SHBg);
+    x1.b = length(unity_SHBb);
+    return x + x1;
+}
 
 float4 frag(VertexOutput i) : COLOR {
     i.normalDir = normalize(i.normalDir);
@@ -70,9 +86,8 @@ float4 frag(VertexOutput i) : COLOR {
     float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz + float3(0, +0.0000000001, 0));
     float3 lightColor = _LightColor0.rgb;
     float3 halfDirection = normalize(viewDirection+lightDirection);
-////// Lighting:
+
     UNITY_LIGHT_ATTENUATION(attenuation,i, i.posWorld.xyz);
-////// Emissive:
 
     #ifdef USE_SHADOWCAP
         float3 normalDirectionShadowCap = normalize(mul( float3(normalLocal.r*_ShadowCapNormalMix,normalLocal.g*_ShadowCapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
@@ -86,14 +101,18 @@ float4 frag(VertexOutput i) : COLOR {
 
     float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
     float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
+    Diffuse = lerp(Diffuse, Diffuse * i.color,_VertexColorBlendDiffuse); // 頂点カラーを合成
+
     #ifdef ARKTOON_CUTOUT
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
     #endif
 
-    float3 ShadeSH9Minus = ShadeSH9Indirect();
-    float3 indirectLighting = saturate(ShadeSH9Minus);
-    float3 ShadeSH9Plus = ShadeSH9Direct();
+    float3 ShadeSH9Plus = GetSHLength();
     float3 directLighting = saturate((ShadeSH9Plus+lightColor));
+    float3 ShadeSH9Minus = ShadeSH9(float4(0,0,0,1));
+    ShadeSH9Minus *= _ShadowIndirectIntensity;
+    float3 indirectLighting = saturate(ShadeSH9Minus);
+
     float3 grayscale_vector = grayscale_vector_node();
     float grayscalelightcolor = dot(lightColor,grayscale_vector);
     float grayscaleDirectLighting = (((dot(lightDirection,normalDirection)*0.5+0.5)*grayscalelightcolor*attenuation)+dot(ShadeSH9Normal( normalDirection ),grayscale_vector));
@@ -155,6 +174,7 @@ float4 frag(VertexOutput i) : COLOR {
             #ifdef USE_CUSTOM_SHADOW_TEXTURE_2ND
                 float4 _ShadowPlanB2CustomShadowTexture_var = tex2D(_ShadowPlanB2CustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanB2CustomShadowTexture));
                 float3 shadowCustomTexture2 = _ShadowPlanB2CustomShadowTexture_var.rgb * _ShadowPlanB2CustomShadowTextureRGB.rgb;
+                shadowCustomTexture2 =  lerp(shadowCustomTexture2, shadowCustomTexture2 * i.color,_VertexColorBlendDiffuse); // 頂点カラーを合成
                 float3 ShadeMap2 = shadowCustomTexture2*shadeMixValue;
             #else
                 float3 Diff_HSV2 = CalculateHSV(Diffuse, _ShadowPlanB2HueShiftFromBase, _ShadowPlanB2SaturationFromBase, _ShadowPlanB2ValueFromBase);
@@ -203,8 +223,8 @@ float4 frag(VertexOutput i) : COLOR {
         float3 RimLight = float3(0,0,0);
     #endif
 
-    float4 _EmissionMap_var = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap));
-    float3 emissive = max((_EmissionMap_var.rgb*_EmissionColor.rgb),RimLight);
+    float3 _Emission = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap)).rgb *_EmissionColor.rgb;
+    float3 emissive = max(lerp(_Emission.rgb, _Emission.rgb * i.color, _VertexColorBlendEmissive), RimLight);
     float3 finalcolor2 = max((ToonedMap+ReflectionMap),Gloss);
 
     // ShadeCapのブレンドモード

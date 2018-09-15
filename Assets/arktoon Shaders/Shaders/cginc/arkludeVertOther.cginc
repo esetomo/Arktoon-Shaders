@@ -90,12 +90,6 @@ float3 CalculateHSV(float3 baseTexture, float hueShift, float saturation, float 
     return (lerp(float3(1,1,1),saturate(3.0*abs(1.0-2.0*frac((hueShift+node_5443.r)+float3(0.0,-1.0/3.0,1.0/3.0)))-1),(node_5443.g*saturation))*(value*node_5443.b));
 }
 
-struct VertexInput {
-    float4 vertex : POSITION;
-    float3 normal : NORMAL;
-    float4 tangent : TANGENT;
-    float2 texcoord0 : TEXCOORD0;
-};
 struct VertexOutput {
     float4 pos : SV_POSITION;
     float2 uv0 : TEXCOORD0;
@@ -105,12 +99,15 @@ struct VertexOutput {
     float3 bitangentDir : TEXCOORD4;
     float3 ambient : TEXCOORD6;
     float3 ambientAtten : TEXCOORD7;
-    LIGHTING_COORDS(5,6)
-    UNITY_FOG_COORDS(7)
+    LIGHTING_COORDS(8,9)
+    UNITY_FOG_COORDS(10)
+    fixed4 color : COLOR;
 };
-VertexOutput vert (VertexInput v) {
+
+VertexOutput vert (appdata_full v) {
     VertexOutput o = (VertexOutput)0;
-    o.uv0 = v.texcoord0;
+    o.uv0 = v.texcoord;
+    o.color = v.color;
     o.normalDir = UnityObjectToWorldNormal(v.normal);
     o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
     o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
@@ -119,7 +116,7 @@ VertexOutput vert (VertexInput v) {
     UNITY_TRANSFER_FOG(o,o.pos);
     TRANSFER_VERTEX_TO_FRAGMENT(o)
 
-    // 頂点ライティングが必要ば場合に取得
+    // 頂点ライティングが必要な場合に取得
     #if UNITY_SHOULD_SAMPLE_SH
         #if defined(VERTEXLIGHT_ON)
             o.ambient = Shade4PointLights(

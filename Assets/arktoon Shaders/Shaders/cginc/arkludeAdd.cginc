@@ -15,8 +15,6 @@ uniform int _PointShadowSteps;
 uniform sampler2D _ShadowStrengthMask; uniform float4 _ShadowStrengthMask_ST;
 uniform sampler2D _BumpMap; uniform float4 _BumpMap_ST;
 uniform float _BumpScale;
-uniform sampler2D _EmissionMap; uniform float4 _EmissionMap_ST;
-uniform float4 _EmissionColor;
 
 uniform float _RimFresnelPower;
 uniform float4 _RimColor;
@@ -41,12 +39,8 @@ uniform float _ShadowCapBlend;
 uniform float4 _ShadowCapColor;
 uniform float _ShadowCapNormalMix;
 
-struct VertexInput {
-    float4 vertex : POSITION;
-    float3 normal : NORMAL;
-    float4 tangent : TANGENT;
-    float2 texcoord0 : TEXCOORD0;
-};
+uniform float _VertexColorBlendDiffuse;
+
 struct VertexOutput {
     float4 pos : SV_POSITION;
     float2 uv0 : TEXCOORD0;
@@ -56,10 +50,13 @@ struct VertexOutput {
     float3 bitangentDir : TEXCOORD4;
     LIGHTING_COORDS(5,6)
     UNITY_FOG_COORDS(7)
+    fixed4 color : COLOR;
 };
-VertexOutput vert (VertexInput v) {
+
+VertexOutput vert (appdata_full v) {
     VertexOutput o = (VertexOutput)0;
-    o.uv0 = v.texcoord0;
+    o.uv0 = v.texcoord;
+    o.color = v.color;
     o.normalDir = UnityObjectToWorldNormal(v.normal);
     o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
     o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
@@ -69,6 +66,7 @@ VertexOutput vert (VertexInput v) {
     TRANSFER_VERTEX_TO_FRAGMENT(o)
     return o;
 }
+
 float4 frag(VertexOutput i) : COLOR {
     i.normalDir = normalize(i.normalDir);
     float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
@@ -84,6 +82,8 @@ float4 frag(VertexOutput i) : COLOR {
     UNITY_LIGHT_ATTENUATION(attenuation,i, i.posWorld.xyz);
     float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
     float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
+    Diffuse = lerp(Diffuse, Diffuse * i.color,_VertexColorBlendDiffuse); // 頂点カラーを合成
+
     #ifdef ARKTOON_CUTOUT
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
     #endif
