@@ -58,6 +58,8 @@ uniform sampler2D _ShadowCapBlendMask; uniform float4 _ShadowCapBlendMask_ST;
 uniform float _ShadowCapBlend;
 uniform float4 _ShadowCapColor;
 uniform float _ShadowCapNormalMix;
+uniform float _VertexColorBlendDiffuse;
+uniform float _VertexColorBlendEmissive;
 uniform float _OtherShadowAdjust;
 uniform float _OtherShadowBorderSharpness;
 
@@ -99,6 +101,8 @@ float4 frag(VertexOutput i) : COLOR {
 
     float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
     float3 Diffuse = (_MainTex_var.rgb*_Color.rgb);
+    Diffuse = lerp(Diffuse, Diffuse * i.color,_VertexColorBlendDiffuse); // 頂点カラーを合成
+
     #ifdef ARKTOON_CUTOUT
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
     #endif
@@ -170,6 +174,7 @@ float4 frag(VertexOutput i) : COLOR {
             #ifdef USE_CUSTOM_SHADOW_TEXTURE_2ND
                 float4 _ShadowPlanB2CustomShadowTexture_var = tex2D(_ShadowPlanB2CustomShadowTexture,TRANSFORM_TEX(i.uv0, _ShadowPlanB2CustomShadowTexture));
                 float3 shadowCustomTexture2 = _ShadowPlanB2CustomShadowTexture_var.rgb * _ShadowPlanB2CustomShadowTextureRGB.rgb;
+                shadowCustomTexture2 =  lerp(shadowCustomTexture2, shadowCustomTexture2 * i.color,_VertexColorBlendDiffuse); // 頂点カラーを合成
                 float3 ShadeMap2 = shadowCustomTexture2*shadeMixValue;
             #else
                 float3 Diff_HSV2 = CalculateHSV(Diffuse, _ShadowPlanB2HueShiftFromBase, _ShadowPlanB2SaturationFromBase, _ShadowPlanB2ValueFromBase);
@@ -218,8 +223,8 @@ float4 frag(VertexOutput i) : COLOR {
         float3 RimLight = float3(0,0,0);
     #endif
 
-    float4 _EmissionMap_var = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap));
-    float3 emissive = max((_EmissionMap_var.rgb*_EmissionColor.rgb),RimLight);
+    float3 _Emission = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap)).rgb *_EmissionColor.rgb;
+    float3 emissive = max(lerp(_Emission.rgb, _Emission.rgb * i.color, _VertexColorBlendEmissive), RimLight);
     float3 finalcolor2 = max((ToonedMap+ReflectionMap),Gloss);
 
     // ShadeCapのブレンドモード

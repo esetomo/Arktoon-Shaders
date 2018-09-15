@@ -28,6 +28,8 @@ Shader "arktoon/Stencil/Writer" {
         _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.5
         _PointShadowborder ("[PointShadow] border ", Range(0, 1)) = 0
         _PointShadowborderBlur ("[PointShadow] border Blur", Range(0, 1)) = 0.05
+        [Toggle(USE_POINT_SHADOW_STEPS)]_PointShadowUseStep ("[PointShadow] use step", Float ) = 0
+        _PointShadowSteps("[PointShadow] steps between borders", Range(2, 10)) = 2
         // Plan B
         [Toggle(USE_SHADE_TEXTURE)]_ShadowPlanBUsePlanB ("[Plan B] Use Plan B", Float ) = 0
         _ShadowPlanBDefaultShadowMix ("[Plan B] Shadow mix", Range(0, 1)) = 1
@@ -96,6 +98,9 @@ Shader "arktoon/Stencil/Writer" {
         _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
         // Stencil(Writer)
         _StencilNumber ("[StencilWriter] Number", int) = 5
+        // vertex color blend
+        _VertexColorBlendDiffuse ("[VertexColor] Blend to diffuse", Range(0,1)) = 0
+        _VertexColorBlendEmissive ("[VertexColor] Blend to emissive", Range(0,1)) = 0
         // advanced tweaking
         _OtherShadowAdjust ("[Advanced] Other Mesh Shadow Adjust", Range(-0.2, 0.2)) = -0.1
         _OtherShadowBorderSharpness ("[Advanced] Other Mesh Shadow Border Sharpness", Range(1, 5)) = 3

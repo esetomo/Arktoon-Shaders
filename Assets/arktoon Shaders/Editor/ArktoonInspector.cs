@@ -97,6 +97,9 @@ namespace ArktoonShaders
         MaterialProperty StencilCompareAction;
         MaterialProperty Cull;
         MaterialProperty ZWrite;
+
+        MaterialProperty VertexColorBlendDiffuse;
+        MaterialProperty VertexColorBlendEmissive;
         MaterialProperty OtherShadowBorderSharpness;
         MaterialProperty OtherShadowAdjust;
         #endregion
@@ -198,6 +201,8 @@ namespace ArktoonShaders
             if(isStencilWriter || isStencilReader) StencilNumber = FindProperty("_StencilNumber", props);
             if(isStencilReader) StencilCompareAction = FindProperty("_StencilCompareAction", props);
             Cull = FindProperty("_Cull", props);
+            VertexColorBlendDiffuse = FindProperty("_VertexColorBlendDiffuse", props);
+            VertexColorBlendEmissive = FindProperty("_VertexColorBlendEmissive", props);
             OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
             OtherShadowAdjust = FindProperty("_OtherShadowAdjust", props);
             if(isFade) ZWrite = FindProperty("_ZWrite", props);
@@ -442,6 +447,8 @@ namespace ArktoonShaders
                     material.DisableKeyword("USE_POINT_SHADOW_STEPS");
                     PointShadowSteps.floatValue = 2;
                     ShadowIndirectIntensity.floatValue = 0.25f;
+                    VertexColorBlendDiffuse.floatValue = 0f;
+                    VertexColorBlendEmissive.floatValue = 0f;
                 }
                 {
                     EditorGUI.indentLevel ++;
@@ -449,6 +456,13 @@ namespace ArktoonShaders
                     {
                         EditorGUI.indentLevel ++;
                         materialEditor.ShaderProperty(ShadowIndirectIntensity, "Indirect face Intensity (0.25)");
+                        EditorGUI.indentLevel --;
+                    }
+                    EditorGUILayout.LabelField("Vertex Colors", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(VertexColorBlendDiffuse, "Color blend to diffuse (def:0) ");
+                        materialEditor.ShaderProperty(VertexColorBlendEmissive, "Color blend to emissive (def:0) ");
                         EditorGUI.indentLevel --;
                     }
                     EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
