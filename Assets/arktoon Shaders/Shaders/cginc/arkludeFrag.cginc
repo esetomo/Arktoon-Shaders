@@ -21,6 +21,7 @@ uniform float _ShadowborderBlur;
 uniform float _ShadowStrength;
 uniform float _ShadowIndirectIntensity;
 uniform int _ShadowSteps;
+uniform float _PointAddIntensity;
 uniform float _PointShadowStrength;
 uniform float _PointShadowborder;
 uniform float _PointShadowborderBlur;
@@ -56,7 +57,6 @@ uniform float4 _ShadowPlanBCustomShadowTextureRGB;
 uniform sampler2D _ShadowCapTexture; uniform float4 _ShadowCapTexture_ST;
 uniform sampler2D _ShadowCapBlendMask; uniform float4 _ShadowCapBlendMask_ST;
 uniform float _ShadowCapBlend;
-uniform float4 _ShadowCapColor;
 uniform float _ShadowCapNormalMix;
 uniform float _VertexColorBlendDiffuse;
 uniform float _VertexColorBlendEmissive;
@@ -94,7 +94,7 @@ float4 frag(VertexOutput i) : COLOR {
         float2 transformShadowCap = (mul( UNITY_MATRIX_V, float4(normalDirectionShadowCap,0) ).xyz.rgb.rg*0.5+0.5);
         float4 _ShadowCapTexture_var = tex2D(_ShadowCapTexture,TRANSFORM_TEX(transformShadowCap, _ShadowCapTexture));
         float4 _ShadowCapBlendMask_var = tex2D(_ShadowCapBlendMask,TRANSFORM_TEX(i.uv0, _ShadowCapBlendMask));
-        float3 shadowcap = (1.0 - ((1.0 - (_ShadowCapTexture_var.rgb*_ShadowCapColor.rgb))*_ShadowCapBlendMask_var.rgb)*_ShadowCapBlend);
+        float3 shadowcap = (1.0 - ((1.0 - (_ShadowCapTexture_var.rgb))*_ShadowCapBlendMask_var.rgb)*_ShadowCapBlend);
     #else
         float3 shadowcap = float3(1000,1000,1000);
     #endif
@@ -143,18 +143,20 @@ float4 frag(VertexOutput i) : COLOR {
         directContribution = 1.0 - (1.0 - directContribution) * _ShadowStrengthMask_var * _ShadowStrength;
     #endif
 
-    // 頂点ライティングを処理
-    float VertexShadowborderMin = max(0, _PointShadowborder - _PointShadowborderBlur/2.0f);
-    float VertexShadowborderMax = min(1, _PointShadowborder + _PointShadowborderBlur/2.0f);
-    float3 lightContribution3 = lerp(i.ambient, i.ambientAtten, 1-_PointShadowStrength);
-    float lightContribution = max(max(lightContribution3.r, lightContribution3.g), lightContribution3.b);
-    float directContributionVertex = 1.0 - ((1.0 - saturate(( (saturate(lightContribution) - VertexShadowborderMin)) / (VertexShadowborderMax - VertexShadowborderMin))));
+    // 頂点ライティング：PixelLightから溢れた4光源をそれぞれ計算
+    float VertexShadowborderMin = max(0, _PointShadowborder - _PointShadowborderBlur/2.0);
+    float VertexShadowborderMax = min(1, _PointShadowborder + _PointShadowborderBlur/2.0);
+    float4 directContributionVertex = 1.0 - ((1.0 - saturate(( (saturate(i.ambientAttenuation) - VertexShadowborderMin)) / (VertexShadowborderMax - VertexShadowborderMin))));
     #ifdef USE_POINT_SHADOW_STEPS
         directContributionVertex = min(1,floor(directContributionVertex * _PointShadowSteps) / (_PointShadowSteps - 1));
     #endif
-    float3 coloredLight = directContributionVertex * lightContribution3;
+    float3 coloredLight_0 = max(directContributionVertex.r * i.lightColor0 * i.ambientAttenuation.r, i.lightColor0 * i.ambientIndirect.r * (1-_PointShadowStrength));
+    float3 coloredLight_1 = max(directContributionVertex.g * i.lightColor1 * i.ambientAttenuation.g, i.lightColor1 * i.ambientIndirect.g * (1-_PointShadowStrength));
+    float3 coloredLight_2 = max(directContributionVertex.b * i.lightColor2 * i.ambientAttenuation.b, i.lightColor2 * i.ambientIndirect.b * (1-_PointShadowStrength));
+    float3 coloredLight_3 = max(directContributionVertex.a * i.lightColor3 * i.ambientAttenuation.a, i.lightColor3 * i.ambientIndirect.a * (1-_PointShadowStrength));
+    float3 coloredLight_sum = (coloredLight_0 + coloredLight_1 + coloredLight_2 + coloredLight_3) * _PointAddIntensity;
 
-    float3 finalLight = lerp(indirectLighting,directLighting,directContribution)+coloredLight;
+    float3 finalLight = lerp(indirectLighting,directLighting,directContribution)+coloredLight_sum;
 
     #ifdef USE_SHADE_TEXTURE
         float3 shadeMixValue = lerp(directLighting, finalLight, _ShadowPlanBDefaultShadowMix);
@@ -183,7 +185,7 @@ float4 frag(VertexOutput i) : COLOR {
             ShadeMap = lerp(ShadeMap2,ShadeMap,directContribution2);
         #endif
 
-        finalLight = lerp(ShadeMap,directLighting,directContribution)+coloredLight;
+        finalLight = lerp(ShadeMap,directLighting,directContribution)+coloredLight_sum;
         float3 ToonedMap = lerp(ShadeMap,Diffuse*finalLight,finalLight);
     #else
         float3 ToonedMap = Diffuse*finalLight;

@@ -8,6 +8,7 @@ uniform float _GlossPower;
 uniform float4 _GlossColor;
 
 uniform float _CutoutCutoutAdjust;
+uniform float _PointAddIntensity;
 uniform float _PointShadowStrength;
 uniform float _PointShadowborder;
 uniform float _PointShadowborderBlur;
@@ -36,7 +37,6 @@ uniform sampler2D _GlossBlendMask; uniform float4 _GlossBlendMask_ST;
 uniform sampler2D _ShadowCapTexture; uniform float4 _ShadowCapTexture_ST;
 uniform sampler2D _ShadowCapBlendMask; uniform float4 _ShadowCapBlendMask_ST;
 uniform float _ShadowCapBlend;
-uniform float4 _ShadowCapColor;
 uniform float _ShadowCapNormalMix;
 
 uniform float _VertexColorBlendDiffuse;
@@ -100,7 +100,7 @@ float4 frag(VertexOutput i) : COLOR {
         float2 transformShadowCap = (mul( UNITY_MATRIX_V, float4(normalDirectionShadowCap,0) ).xyz.rgb.rg*0.5+0.5);
         float4 _ShadowCapTexture_var = tex2D(_ShadowCapTexture,TRANSFORM_TEX(transformShadowCap, _ShadowCapTexture));
         float4 _ShadowCapBlendMask_var = tex2D(_ShadowCapBlendMask,TRANSFORM_TEX(i.uv0, _ShadowCapBlendMask));
-        float3 shadowcap = (1.0 - ((1.0 - (_ShadowCapTexture_var.rgb*_ShadowCapColor.rgb))*_ShadowCapBlendMask_var.rgb)*_ShadowCapBlend);
+        float3 shadowcap = (1.0 - ((1.0 - (_ShadowCapTexture_var.rgb))*_ShadowCapBlendMask_var.rgb)*_ShadowCapBlend);
     #else
         float3 shadowcap = float3(1000,1000,1000);
     #endif
@@ -115,7 +115,7 @@ float4 frag(VertexOutput i) : COLOR {
     #endif
     float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
     float3 finalLight = saturate(directContribution + ((1 - (_PointShadowStrength * _ShadowStrengthMask_var)) * attenuation));
-    float3 coloredLight = lightColor*finalLight;
+    float3 coloredLight = saturate(lightColor*finalLight*_PointAddIntensity);
 
     #ifdef USE_MATCAP
         float3 normalDirectionMatcap = normalize(mul( float3(normalLocal.r*_MatcapNormalMix,normalLocal.g*_MatcapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals

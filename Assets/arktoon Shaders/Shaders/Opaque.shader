@@ -25,9 +25,10 @@ Shader "arktoon/Opaque" {
         [Toggle(USE_SHADOW_STEPS)]_ShadowUseStep ("[Shadow] use step", Float ) = 0
         _ShadowSteps("[Shadow] steps between borders", Range(2, 10)) = 4
         // PointShadow (received from Point/Spot Lights as Pixel/Vertex Lights)
-        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 0.5
-        _PointShadowborder ("[PointShadow] border ", Range(0, 1)) = 0
-        _PointShadowborderBlur ("[PointShadow] border Blur", Range(0, 1)) = 0.05
+        _PointAddIntensity ("[PointShadow] Light Intensity", Range(0,1)) = 1
+        _PointShadowStrength ("[PointShadow] Strength", Range(0, 1)) = 1
+        _PointShadowborder ("[PointShadow] border ", Range(0, 1)) = 0.5
+        _PointShadowborderBlur ("[PointShadow] border Blur", Range(0, 1)) = 0.01
         [Toggle(USE_POINT_SHADOW_STEPS)]_PointShadowUseStep ("[PointShadow] use step", Float ) = 0
         _PointShadowSteps("[PointShadow] steps between borders", Range(2, 10)) = 2
         // Plan B
@@ -95,7 +96,6 @@ Shader "arktoon/Opaque" {
         _ShadowCapBlendMask ("[ShadowCap] Blend Mask", 2D) = "white" {}
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
-        _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
         // vertex color blend
         _VertexColorBlendDiffuse ("[VertexColor] Blend to diffuse", Range(0,1)) = 0
         _VertexColorBlendEmissive ("[VertexColor] Blend to emissive", Range(0,1)) = 0
