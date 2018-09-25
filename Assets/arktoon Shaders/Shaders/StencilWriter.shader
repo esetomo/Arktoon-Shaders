@@ -97,7 +97,6 @@ Shader "arktoon/Stencil/Writer/Cutout" {
         _ShadowCapBlendMask ("[ShadowCap] Blend Mask", 2D) = "white" {}
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
-        _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
         // Stencil(Writer)
         _StencilNumber ("[StencilWriter] Number", int) = 5
         // vertex color blend

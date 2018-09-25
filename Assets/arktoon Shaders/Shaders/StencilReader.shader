@@ -97,7 +97,6 @@ Shader "arktoon/Stencil/Reader/Cutout" {
         _ShadowCapBlendMask ("[ShadowCap] Blend Mask", 2D) = "white" {}
         _ShadowCapNormalMix ("[ShadowCap] Normal map mix", Range(0, 2)) = 1
         _ShadowCapTexture ("[ShadowCap] Texture", 2D) = "white" {}
-        _ShadowCapColor ("[ShadowCap] Color", Color) = (1,1,1,1)
         // Stencil(Reader)
         _StencilNumber ("[StencilReader] Number", int) = 5
         [Enum(UnityEngine.Rendering.CompareFunction)] _StencilCompareAction ("[StencilReader] Compare Action", int) = 6

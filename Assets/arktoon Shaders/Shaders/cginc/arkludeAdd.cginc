@@ -36,7 +36,6 @@ uniform sampler2D _GlossBlendMask; uniform float4 _GlossBlendMask_ST;
 uniform sampler2D _ShadowCapTexture; uniform float4 _ShadowCapTexture_ST;
 uniform sampler2D _ShadowCapBlendMask; uniform float4 _ShadowCapBlendMask_ST;
 uniform float _ShadowCapBlend;
-uniform float4 _ShadowCapColor;
 uniform float _ShadowCapNormalMix;
 
 uniform float _VertexColorBlendDiffuse;
@@ -100,7 +99,7 @@ float4 frag(VertexOutput i) : COLOR {
         float2 transformShadowCap = (mul( UNITY_MATRIX_V, float4(normalDirectionShadowCap,0) ).xyz.rgb.rg*0.5+0.5);
         float4 _ShadowCapTexture_var = tex2D(_ShadowCapTexture,TRANSFORM_TEX(transformShadowCap, _ShadowCapTexture));
         float4 _ShadowCapBlendMask_var = tex2D(_ShadowCapBlendMask,TRANSFORM_TEX(i.uv0, _ShadowCapBlendMask));
-        float3 shadowcap = (1.0 - ((1.0 - (_ShadowCapTexture_var.rgb*_ShadowCapColor.rgb))*_ShadowCapBlendMask_var.rgb)*_ShadowCapBlend);
+        float3 shadowcap = (1.0 - ((1.0 - (_ShadowCapTexture_var.rgb))*_ShadowCapBlendMask_var.rgb)*_ShadowCapBlend);
     #else
         float3 shadowcap = float3(1000,1000,1000);
     #endif

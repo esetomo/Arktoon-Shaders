@@ -92,7 +92,6 @@ namespace ArktoonShaders
         MaterialProperty ShadowCapBlendMask;
         MaterialProperty ShadowCapNormalMix;
         MaterialProperty ShadowCapTexture;
-        MaterialProperty ShadowCapColor;
         MaterialProperty StencilNumber;
         MaterialProperty StencilCompareAction;
         MaterialProperty Cull;
@@ -197,7 +196,6 @@ namespace ArktoonShaders
             ShadowCapBlendMask = FindProperty("_ShadowCapBlendMask", props);
             ShadowCapNormalMix = FindProperty("_ShadowCapNormalMix", props);
             ShadowCapTexture = FindProperty("_ShadowCapTexture", props);
-            ShadowCapColor = FindProperty("_ShadowCapColor", props);
             if(isStencilWriter || isStencilReader) StencilNumber = FindProperty("_StencilNumber", props);
             if(isStencilReader) StencilCompareAction = FindProperty("_StencilCompareAction", props);
             Cull = FindProperty("_Cull", props);
@@ -406,7 +404,6 @@ namespace ArktoonShaders
                         materialEditor.ShaderProperty(ShadowCapBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(ShadowCapNormalMix,"Normal Map mix");
                         materialEditor.ShaderProperty(ShadowCapTexture,"Texture");
-                        materialEditor.ShaderProperty(ShadowCapColor,"Color");
                     }
                     EditorGUI.indentLevel--;
                 }
