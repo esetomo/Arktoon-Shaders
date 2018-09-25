@@ -114,7 +114,7 @@ namespace ArktoonShaders
             // shader.nameによって調整可能なプロパティを制御する。
             bool isOpaque = shader.name.Contains("Opaque");
             bool isFade = shader.name.Contains("Fade");
-            bool isCutout = shader.name.Contains("AlphaCutout");
+            bool isCutout = shader.name.Contains("Cutout");
             bool isStencilWriter = shader.name.Contains("Stencil/Writer");
             bool isStencilReader = shader.name.Contains("Stencil/Reader");
 
