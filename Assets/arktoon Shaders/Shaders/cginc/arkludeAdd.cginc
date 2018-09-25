@@ -8,6 +8,7 @@ uniform float _GlossPower;
 uniform float4 _GlossColor;
 
 uniform float _CutoutCutoutAdjust;
+uniform float _PointAddIntensity;
 uniform float _PointShadowStrength;
 uniform float _PointShadowborder;
 uniform float _PointShadowborderBlur;
@@ -114,7 +115,7 @@ float4 frag(VertexOutput i) : COLOR {
     #endif
     float _ShadowStrengthMask_var = tex2D(_ShadowStrengthMask, TRANSFORM_TEX(i.uv0, _ShadowStrengthMask));
     float3 finalLight = saturate(directContribution + ((1 - (_PointShadowStrength * _ShadowStrengthMask_var)) * attenuation));
-    float3 coloredLight = lightColor*finalLight;
+    float3 coloredLight = saturate(lightColor*finalLight*_PointAddIntensity);
 
     #ifdef USE_MATCAP
         float3 normalDirectionMatcap = normalize(mul( float3(normalLocal.r*_MatcapNormalMix,normalLocal.g*_MatcapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals

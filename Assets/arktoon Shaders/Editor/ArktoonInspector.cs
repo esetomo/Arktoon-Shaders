@@ -30,6 +30,7 @@ namespace ArktoonShaders
         MaterialProperty ShadowIndirectIntensity;
         MaterialProperty ShadowUseStep;
         MaterialProperty ShadowSteps;
+        MaterialProperty PointAddIntensity;
         MaterialProperty PointShadowStrength;
         MaterialProperty PointShadowborder;
         MaterialProperty PointShadowborderBlur;
@@ -132,6 +133,7 @@ namespace ArktoonShaders
             ShadowIndirectIntensity = FindProperty("_ShadowIndirectIntensity", props);
             ShadowUseStep = FindProperty("_ShadowUseStep", props);
             ShadowSteps = FindProperty("_ShadowSteps", props);
+            PointAddIntensity = FindProperty("_PointAddIntensity", props);
             PointShadowStrength = FindProperty("_PointShadowStrength", props);
             PointShadowborder = FindProperty("_PointShadowborder", props);
             PointShadowborderBlur= FindProperty("_PointShadowborderBlur", props);
@@ -435,9 +437,10 @@ namespace ArktoonShaders
                 EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
                 EditorGUILayout.HelpBox("These are some shade tweaking. no need to change usually." + Environment.NewLine + "ほとんどのケースで触る必要のないやつら。",MessageType.Info);
                 if (GUILayout.Button("Revert advanced params.")){
+                    PointAddIntensity.floatValue = 1f;
                     PointShadowStrength.floatValue = 1f;
-                    PointShadowborder.floatValue = 0.25f;
-                    PointShadowborderBlur.floatValue = 0.1f;
+                    PointShadowborder.floatValue = 0.5f;
+                    PointShadowborderBlur.floatValue = 0.01f;
                     OtherShadowAdjust.floatValue = -0.1f;
                     OtherShadowBorderSharpness.floatValue = 3;
                     PointShadowUseStep.floatValue = 0;
@@ -462,13 +465,14 @@ namespace ArktoonShaders
                         materialEditor.ShaderProperty(VertexColorBlendEmissive, "Color blend to emissive (def:0) ");
                         EditorGUI.indentLevel --;
                     }
-                    EditorGUILayout.LabelField("PointLight Shadows", EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField("PointLights", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
-                        materialEditor.ShaderProperty(PointShadowStrength, "Strength (def:1)");
-                        materialEditor.ShaderProperty(PointShadowborder, "Border (def:0.25)");
-                        materialEditor.ShaderProperty(PointShadowborderBlur, "Border blur (def:0.1)");
-                        materialEditor.ShaderProperty(PointShadowUseStep, "Use Steps");
+                        materialEditor.ShaderProperty(PointAddIntensity, "Intensity (def:1)");
+                        materialEditor.ShaderProperty(PointShadowStrength, "Shadow Strength (def:1)");
+                        materialEditor.ShaderProperty(PointShadowborder, "Shadow Border (def:0.5)");
+                        materialEditor.ShaderProperty(PointShadowborderBlur, "Shadow Border blur (def:0.01)");
+                        materialEditor.ShaderProperty(PointShadowUseStep, "Use Shadow Steps");
                         var usePointStep = PointShadowUseStep.floatValue;
                         if(usePointStep > 0)
                         {

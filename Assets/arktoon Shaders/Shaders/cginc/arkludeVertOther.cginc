@@ -22,64 +22,6 @@ float3 ShadeSH9Normal( float3 normalDirection ){
     return ShadeSH9(half4(normalDirection, 1.0));
 }
 
-float3 Shade4PointLightsIndirect(
-    float4 lightPosX,
-    float4 lightPosY,
-    float4 lightPosZ,
-    float3 lightColor0,
-    float3 lightColor1,
-    float3 lightColor2,
-    float3 lightColor3,
-    float4 lightAttenSq,
-    float3 pos,float3 normal)
-{
-    // to light vectors
-    float4 toLightX = lightPosX - pos.x;
-    float4 toLightY = lightPosY - pos.y;
-    float4 toLightZ = lightPosZ - pos.z;
-
-    // squared lengths
-    float4 lengthSq = 0;
-    lengthSq += toLightX * toLightX;
-    lengthSq += toLightY * toLightY;
-    lengthSq += toLightZ * toLightZ;
-
-    // don't produce NaNs if some vertex position overlaps with the light
-    lengthSq = max(lengthSq, 0.000001);
-
-    // NdotL
-    float4 ndotl = 0;
-    ndotl += toLightX * normal.x;
-    ndotl += toLightY * normal.y;
-    ndotl += toLightZ * normal.z;
-
-    // correct NdotL
-    float4 corr = rsqrt(lengthSq);
-    ndotl = max(float4(0,0,0,0), ndotl * corr);
-
-    // attenuation
-    float4 atten = 1.0 / (1.0 + lengthSq * lightAttenSq);
-    float4 diff = ndotl * atten;
-    diff = min(1,corr* atten);
-
-    // final color
-    float3 col = 0;
-    col += lightColor0 * sqrt(diff.x);
-    col += lightColor1 * sqrt(diff.y);
-    col += lightColor2 * sqrt(diff.z);
-    col += lightColor3 * sqrt(diff.w);
-
-    return col;
-
-    //lightColor : 色と明るさ。その光がゼロ距離にいる時の強さ
-    //corr
-    //ndot1
-    //atten :　
-    //lengthSq : 距離の2乗
-    //lightAttenSq : その光の減衰量（高い＝濃い＝その光のRangeが小さい）
-    //diff : 光のかかりかたの最終計算結果
-}
-
 float3 CalculateHSV(float3 baseTexture, float hueShift, float saturation, float value ){
     float4 node_5443_k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
     float4 node_5443_p = lerp(float4(float4(baseTexture,0.0).zy, node_5443_k.wz), float4(float4(baseTexture,0.0).yz, node_5443_k.xy), step(float4(baseTexture,0.0).z, float4(baseTexture,0.0).y));
@@ -97,11 +39,15 @@ struct VertexOutput {
     float3 normalDir : TEXCOORD2;
     float3 tangentDir : TEXCOORD3;
     float3 bitangentDir : TEXCOORD4;
-    float3 ambient : TEXCOORD6;
-    float3 ambientAtten : TEXCOORD7;
-    LIGHTING_COORDS(8,9)
-    UNITY_FOG_COORDS(10)
+    LIGHTING_COORDS(5,6)
+    UNITY_FOG_COORDS(7)
     fixed4 color : COLOR;
+    float3 lightColor0 : LIGHT_COLOR0;
+    float3 lightColor1 : LIGHT_COLOR1;
+    float3 lightColor2 : LIGHT_COLOR2;
+    float3 lightColor3 : LIGHT_COLOR3;
+    float4 ambientAttenuation : AMBIENT_ATTEN;
+    float4 ambientIndirect : AMBIENT_INDIRECT;
 };
 
 VertexOutput vert (appdata_full v) {
@@ -119,23 +65,46 @@ VertexOutput vert (appdata_full v) {
     // 頂点ライティングが必要な場合に取得
     #if UNITY_SHOULD_SAMPLE_SH
         #if defined(VERTEXLIGHT_ON)
-            o.ambient = Shade4PointLights(
-                unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
-                unity_LightColor[0].rgb, unity_LightColor[1].rgb,
-                unity_LightColor[2].rgb, unity_LightColor[3].rgb,
-                unity_4LightAtten0, o.posWorld, o.normalDir
-            );
-            o.ambientAtten = Shade4PointLightsIndirect(
-                unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
-                unity_LightColor[0].rgb, unity_LightColor[1].rgb,
-                unity_LightColor[2].rgb, unity_LightColor[3].rgb,
-                unity_4LightAtten0, o.posWorld, o.normalDir
-            );
+            o.lightColor0 = unity_LightColor[0].rgb;
+            o.lightColor1 = unity_LightColor[1].rgb;
+            o.lightColor2 = unity_LightColor[2].rgb;
+            o.lightColor3 = unity_LightColor[3].rgb;
+
+            // Shade4PointLightsを展開して改変
+            // {
+                // to light vectors
+                float4 toLightX = unity_4LightPosX0 - o.posWorld.x;
+                float4 toLightY = unity_4LightPosY0 - o.posWorld.y;
+                float4 toLightZ = unity_4LightPosZ0 - o.posWorld.z;
+                // squared lengths
+                float4 lengthSq = 0;
+                lengthSq += toLightX * toLightX;
+                lengthSq += toLightY * toLightY;
+                lengthSq += toLightZ * toLightZ;
+                // don't produce NaNs if some vertex position overlaps with the light
+                lengthSq = max(lengthSq, 0.000001);
+
+                // NdotL
+                float4 ndotl = 0;
+                ndotl += toLightX * o.normalDir.x;
+                ndotl += toLightY * o.normalDir.y;
+                ndotl += toLightZ * o.normalDir.z;
+                // correct NdotL
+                float4 corr = rsqrt(lengthSq);
+                ndotl = max (float4(0,0,0,0), ndotl * corr);
+                // attenuation
+                float4 atten = 1.0 / (1.0 + lengthSq * unity_4LightAtten0);
+                float4 diff = ndotl * atten;
+            // }
+
+            o.ambientAttenuation = diff;
+            o.ambientIndirect = sqrt(min(1,corr* atten));
+
         #else
-            o.ambient = o.ambientAtten = 0;
+            o.ambientIndirect = o.ambientIndirect = 0;
         #endif
     #else
-        o.ambient = o.ambientAtten = 0;
+        o.ambientIndirect = o.ambientIndirect = 0;
     #endif
     return o;
 }
