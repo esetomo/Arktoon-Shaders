@@ -89,6 +89,7 @@ float4 frag(VertexOutput i) : COLOR {
 
     UNITY_LIGHT_ATTENUATION(attenuation,i, i.posWorld.xyz);
 
+    // オプション:ShadeCap
     #ifdef USE_SHADOWCAP
         float3 normalDirectionShadowCap = normalize(mul( float3(normalLocal.r*_ShadowCapNormalMix,normalLocal.g*_ShadowCapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
         float2 transformShadowCap = (mul( UNITY_MATRIX_V, float4(normalDirectionShadowCap,0) ).xyz.rgb.rg*0.5+0.5);
@@ -107,6 +108,7 @@ float4 frag(VertexOutput i) : COLOR {
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
     #endif
 
+    // 明るい部分と暗い部分をサンプリング・グレースケールでリマッピングして全面の光量を再計算
     float3 ShadeSH9Plus = GetSHLength();
     float3 directLighting = saturate((ShadeSH9Plus+lightColor));
     float3 ShadeSH9Minus = ShadeSH9(float4(0,0,0,1));
@@ -144,20 +146,26 @@ float4 frag(VertexOutput i) : COLOR {
     #endif
 
     // 頂点ライティング：PixelLightから溢れた4光源をそれぞれ計算
-    float VertexShadowborderMin = max(0, _PointShadowborder - _PointShadowborderBlur/2.0);
-    float VertexShadowborderMax = min(1, _PointShadowborder + _PointShadowborderBlur/2.0);
-    float4 directContributionVertex = 1.0 - ((1.0 - saturate(( (saturate(i.ambientAttenuation) - VertexShadowborderMin)) / (VertexShadowborderMax - VertexShadowborderMin))));
-    #ifdef USE_POINT_SHADOW_STEPS
-        directContributionVertex = min(1,floor(directContributionVertex * _PointShadowSteps) / (_PointShadowSteps - 1));
+    #ifdef USE_VERTEX_LIGHT
+        float VertexShadowborderMin = max(0, _PointShadowborder - _PointShadowborderBlur/2.0);
+        float VertexShadowborderMax = min(1, _PointShadowborder + _PointShadowborderBlur/2.0);
+        float4 directContributionVertex = 1.0 - ((1.0 - saturate(( (saturate(i.ambientAttenuation) - VertexShadowborderMin)) / (VertexShadowborderMax - VertexShadowborderMin))));
+        #ifdef USE_POINT_SHADOW_STEPS
+            directContributionVertex = min(1,floor(directContributionVertex * _PointShadowSteps) / (_PointShadowSteps - 1));
+        #endif
+        float3 coloredLight_0 = max(directContributionVertex.r * i.lightColor0 * i.ambientAttenuation.r, i.lightColor0 * i.ambientIndirect.r * (1-_PointShadowStrength));
+        float3 coloredLight_1 = max(directContributionVertex.g * i.lightColor1 * i.ambientAttenuation.g, i.lightColor1 * i.ambientIndirect.g * (1-_PointShadowStrength));
+        float3 coloredLight_2 = max(directContributionVertex.b * i.lightColor2 * i.ambientAttenuation.b, i.lightColor2 * i.ambientIndirect.b * (1-_PointShadowStrength));
+        float3 coloredLight_3 = max(directContributionVertex.a * i.lightColor3 * i.ambientAttenuation.a, i.lightColor3 * i.ambientIndirect.a * (1-_PointShadowStrength));
+        float3 coloredLight_sum = (coloredLight_0 + coloredLight_1 + coloredLight_2 + coloredLight_3) * _PointAddIntensity;
+    #else
+        float3 coloredLight_sum = float3(0,0,0);
     #endif
-    float3 coloredLight_0 = max(directContributionVertex.r * i.lightColor0 * i.ambientAttenuation.r, i.lightColor0 * i.ambientIndirect.r * (1-_PointShadowStrength));
-    float3 coloredLight_1 = max(directContributionVertex.g * i.lightColor1 * i.ambientAttenuation.g, i.lightColor1 * i.ambientIndirect.g * (1-_PointShadowStrength));
-    float3 coloredLight_2 = max(directContributionVertex.b * i.lightColor2 * i.ambientAttenuation.b, i.lightColor2 * i.ambientIndirect.b * (1-_PointShadowStrength));
-    float3 coloredLight_3 = max(directContributionVertex.a * i.lightColor3 * i.ambientAttenuation.a, i.lightColor3 * i.ambientIndirect.a * (1-_PointShadowStrength));
-    float3 coloredLight_sum = (coloredLight_0 + coloredLight_1 + coloredLight_2 + coloredLight_3) * _PointAddIntensity;
 
     float3 finalLight = lerp(indirectLighting,directLighting,directContribution)+coloredLight_sum;
 
+
+    // カスタム陰を使っている場合、directContributionや直前のfinalLightを使い、finalLightを上書きする
     #ifdef USE_SHADE_TEXTURE
         float3 shadeMixValue = lerp(directLighting, finalLight, _ShadowPlanBDefaultShadowMix);
         #ifdef USE_CUSTOM_SHADOW_TEXTURE
@@ -191,6 +199,7 @@ float4 frag(VertexOutput i) : COLOR {
         float3 ToonedMap = Diffuse*finalLight;
     #endif
 
+    // オプション：Reflection
     #ifdef USE_REFLECTION
         float3 normalDirectionReflection = normalize(mul( float3(normalLocal.r*_ReflectionNormalMix, normalLocal.g*_ReflectionNormalMix, normalLocal.b), tangentTransform )); // Perturbed normals
         float3 viewReflectDirection = reflect( -viewDirection, normalDirectionReflection );
@@ -200,6 +209,7 @@ float4 frag(VertexOutput i) : COLOR {
         float3 ReflectionMap = float3(0,0,0);
     #endif
 
+    // オプション：Gloss
     #ifdef USE_GLOSS
         float _GlossBlendMask_var = tex2D(_GlossBlendMask, TRANSFORM_TEX(i.uv0, _GlossBlendMask));
         float3 Gloss = ((max(0,dot(lightDirection,normalDirection))*pow(max(0,dot(normalDirection,halfDirection)),exp2(lerp(1,11,_GlossPower)))*_GlossColor.rgb)*lightColor*attenuation*_GlossBlend * _GlossBlendMask_var);
@@ -207,6 +217,7 @@ float4 frag(VertexOutput i) : COLOR {
         float3 Gloss = float3(0,0,0);
     #endif
 
+    // オプション：MatCap
     #ifdef USE_MATCAP
         float3 normalDirectionMatcap = normalize(mul( float3(normalLocal.r*_MatcapNormalMix,normalLocal.g*_MatcapNormalMix,normalLocal.b), tangentTransform )); // Perturbed normals
         float2 transformMatcap = (mul( UNITY_MATRIX_V, float4(normalDirectionMatcap,0) ).xyz.rgb.rg*0.5+0.5);
@@ -217,6 +228,7 @@ float4 frag(VertexOutput i) : COLOR {
         float3 matcap = float3(0,0,0);
     #endif
 
+    // オプション：Rim
     #ifdef USE_RIM
         float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
         float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
@@ -225,6 +237,7 @@ float4 frag(VertexOutput i) : COLOR {
         float3 RimLight = float3(0,0,0);
     #endif
 
+    // EmissiveColorはこのタイミングで合成
     float3 _Emission = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap)).rgb *_EmissionColor.rgb;
     float3 emissive = max(lerp(_Emission.rgb, _Emission.rgb * i.color, _VertexColorBlendEmissive), RimLight);
     float3 finalcolor2 = max((ToonedMap+ReflectionMap),Gloss);
