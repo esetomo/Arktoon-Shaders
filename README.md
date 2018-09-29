@@ -7,7 +7,7 @@ Here : https://github.com/synqark/Arktoon-Shaders/releases
 # Features
  - Configurable toonlike shader.
  - Includes Opaque/Fade/AlphaCutout variations.
- - All variations are supported Lightprobe and Point lights.
+ - All variations are supported Lightprobe and Point lights(both PixelLight and Per-vertex Light!)
  - Customizable Shade color (or use other texture for shade)
  - Additional features (These are switchable and be optimized in shader code.)
    - Gloss
@@ -16,6 +16,7 @@ Here : https://github.com/synqark/Arktoon-Shaders/releases
    - Reflection (Scene ReflectionProbe or other Cubemap texture.)
    - Rim (additive color/texture)
    - Shade Cap ( Darker version of MatCap. can use for shading!)
+   - Vertex Color (usually for MagicaVoxel, etc.)
    
 # Hot to use?  
  In Japanese. I'm sorry!  
