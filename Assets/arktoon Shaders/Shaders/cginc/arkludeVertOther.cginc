@@ -64,7 +64,7 @@ VertexOutput vert (appdata_full v) {
 
     // 頂点ライティングが必要な場合に取得
     #if UNITY_SHOULD_SAMPLE_SH
-        #if defined(VERTEXLIGHT_ON)
+        #if defined(VERTEXLIGHT_ON) && defined(USE_VERTEX_LIGHT)
             o.lightColor0 = unity_LightColor[0].rgb;
             o.lightColor1 = unity_LightColor[1].rgb;
             o.lightColor2 = unity_LightColor[2].rgb;
@@ -101,10 +101,10 @@ VertexOutput vert (appdata_full v) {
             o.ambientIndirect = sqrt(min(1,corr* atten));
 
         #else
-            o.ambientIndirect = o.ambientIndirect = 0;
+            o.ambientIndirect = o.ambientAttenuation = 0;
         #endif
     #else
-        o.ambientIndirect = o.ambientIndirect = 0;
+        o.ambientIndirect = o.ambientAttenuation = 0;
     #endif
     return o;
 }

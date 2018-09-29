@@ -102,6 +102,7 @@ namespace ArktoonShaders
         MaterialProperty VertexColorBlendEmissive;
         MaterialProperty OtherShadowBorderSharpness;
         MaterialProperty OtherShadowAdjust;
+        MaterialProperty UseVertexLight;
         #endregion
 
         bool _isOpenAdvance;
@@ -205,6 +206,7 @@ namespace ArktoonShaders
             VertexColorBlendEmissive = FindProperty("_VertexColorBlendEmissive", props);
             OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
             OtherShadowAdjust = FindProperty("_OtherShadowAdjust", props);
+            UseVertexLight = FindProperty("_UseVertexLight", props);
             if(isFade) ZWrite = FindProperty("_ZWrite", props);
 
             EditorGUIUtility.labelWidth = 0f;
@@ -449,6 +451,8 @@ namespace ArktoonShaders
                     ShadowIndirectIntensity.floatValue = 0.25f;
                     VertexColorBlendDiffuse.floatValue = 0f;
                     VertexColorBlendEmissive.floatValue = 0f;
+                    UseVertexLight.floatValue = 1f;
+                    material.EnableKeyword("USE_VERTEX_LIGHT");
                 }
                 {
                     EditorGUI.indentLevel ++;
@@ -478,6 +482,7 @@ namespace ArktoonShaders
                         {
                             materialEditor.ShaderProperty(PointShadowSteps, " ");
                         }
+                        materialEditor.ShaderProperty(UseVertexLight, "Use Per-vertex Light");
                         EditorGUI.indentLevel --;
                     }
                     EditorGUILayout.LabelField("Shade from other meshes", EditorStyles.boldLabel);
