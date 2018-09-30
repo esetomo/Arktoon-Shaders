@@ -312,9 +312,9 @@ namespace ArktoonShaders
                     var useGloss = UseGloss.floatValue;
                     if(useGloss > 0)
                     {
-                        materialEditor.ShaderProperty(GlossBlend, "Blend");
-                        materialEditor.ShaderProperty(GlossBlendMask, "Blend Mask");
-                        materialEditor.ShaderProperty(GlossPower, "Power");
+                        materialEditor.ShaderProperty(GlossBlend, "Smoothness");
+                        materialEditor.ShaderProperty(GlossBlendMask, "Smoothness Mask");
+                        materialEditor.ShaderProperty(GlossPower, "Metallic");
                         materialEditor.ShaderProperty(GlossColor, "Color");
                     }
                     EditorGUI.indentLevel --;

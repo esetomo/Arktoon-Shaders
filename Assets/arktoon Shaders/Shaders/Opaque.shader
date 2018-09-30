@@ -53,9 +53,9 @@ Shader "arktoon/Opaque" {
 
         // Gloss
         [Toggle(USE_GLOSS)]_UseGloss ("[Gloss] Enabled", Float) = 0
-        _GlossBlend ("[Gloss] Blend", Range(0, 1)) = 1
-        _GlossBlendMask ("[Gloss] Blend Mask", 2D) = "white" {}
-        _GlossPower ("[Gloss] Power", Range(0, 1)) = 0.5
+        _GlossBlend ("[Gloss] Smoothness", Range(0, 1)) = 0.5
+        _GlossBlendMask ("[Gloss] Smoothness Mask", 2D) = "white" {}
+        _GlossPower ("[Gloss] Metallic", Range(0, 1)) = 0.5
         _GlossColor ("[Gloss] Color", Color) = (1,1,1,1)
         // Outline
         [Toggle(USE_OUTLINE)]_UseOutline ("[Outline] Enabled", Float) = 0
