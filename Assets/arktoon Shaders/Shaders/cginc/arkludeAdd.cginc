@@ -90,9 +90,39 @@ float4 frag(VertexOutput i) : COLOR {
 
     #ifdef USE_GLOSS
         float _GlossBlendMask_var = tex2D(_GlossBlendMask, TRANSFORM_TEX(i.uv0, _GlossBlendMask));
-        float3 Gloss = ((max(0,dot(lightDirection,normalDirection))*pow(max(0,dot(normalDirection,halfDirection)),exp2(lerp(1,11,_GlossPower)))*_GlossColor.rgb)*_LightColor0.rgb*attenuation*_GlossBlend*_GlossBlendMask_var);
+
+        float gloss = _GlossBlend * _GlossBlendMask_var;
+        float perceptualRoughness = 1.0 - gloss;
+        float roughness = perceptualRoughness * perceptualRoughness;
+        float specPow = exp2( gloss * 10.0+1.0);
+
+        float NdotL = saturate(dot( normalDirection, lightDirection ));
+        float LdotH = saturate(dot(lightDirection, halfDirection));
+        float3 specularColor = _GlossPower;
+        float specularMonochrome;
+        float3 diffuseColor = Diffuse;
+        diffuseColor = DiffuseAndSpecularFromMetallic( diffuseColor, specularColor, specularColor, specularMonochrome );
+        specularMonochrome = 1.0-specularMonochrome;
+        float NdotV = abs(dot( normalDirection, viewDirection ));
+        float NdotH = saturate(dot( normalDirection, halfDirection ));
+        float VdotH = saturate(dot( viewDirection, halfDirection ));
+        float visTerm = SmithJointGGXVisibilityTerm( NdotL, NdotV, roughness );
+        float normTerm = GGXTerm(NdotH, roughness);
+        float specularPBL = (visTerm*normTerm) * UNITY_PI;
+        #ifdef UNITY_COLORSPACE_GAMMA
+            specularPBL = sqrt(max(1e-4h, specularPBL));
+        #endif
+        specularPBL = max(0, specularPBL * NdotL);
+        #if defined(_SPECULARHIGHLIGHTS_OFF)
+            specularPBL = 0.0;
+        #endif
+        specularPBL *= any(specularColor) ? 1.0 : 0.0;
+        float3 attenColor = attenuation * _LightColor0.xyz;
+        float3 directSpecular = attenColor*specularPBL*FresnelTerm(specularColor, LdotH);
+        half grazingTerm = saturate( gloss + specularMonochrome );
+        float3 specular = attenuation * directSpecular * _GlossColor.rgb;
     #else
-        float3 Gloss = float3(0,0,0);
+        float3 specular = float3(0,0,0);
     #endif
 
     #ifdef USE_SHADOWCAP
@@ -138,7 +168,7 @@ float4 frag(VertexOutput i) : COLOR {
     #endif
 
     float3 ToonedMap = Diffuse * coloredLight;
-    float3 finalColor = max((max(ToonedMap, RimLight)),Gloss);
+    float3 finalColor = max(ToonedMap, RimLight) + specular;
 
     // ShadeCapのブレンドモード
     #ifdef USE_SHADOWCAP

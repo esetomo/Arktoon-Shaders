@@ -73,6 +73,7 @@ namespace ArktoonShaders
         MaterialProperty MatcapNormalMix;
         MaterialProperty MatcapShadeMix;
         MaterialProperty UseReflection;
+        MaterialProperty UseReflectionProbe;
         MaterialProperty ReflectionReflectionPower;
         MaterialProperty ReflectionReflectionMask;
         MaterialProperty ReflectionNormalMix;
@@ -97,12 +98,13 @@ namespace ArktoonShaders
         MaterialProperty StencilCompareAction;
         MaterialProperty Cull;
         MaterialProperty ZWrite;
-
         MaterialProperty VertexColorBlendDiffuse;
         MaterialProperty VertexColorBlendEmissive;
         MaterialProperty OtherShadowBorderSharpness;
         MaterialProperty OtherShadowAdjust;
         MaterialProperty UseVertexLight;
+        MaterialProperty BackfaceColorMultiply;
+
         #endregion
 
         bool _isOpenAdvance;
@@ -179,6 +181,7 @@ namespace ArktoonShaders
             MatcapNormalMix = FindProperty("_MatcapNormalMix", props);
             MatcapShadeMix = FindProperty("_MatcapShadeMix", props);
             UseReflection = FindProperty("_UseReflection", props);
+            UseReflectionProbe = FindProperty("_UseReflectionProbe", props);
             ReflectionReflectionPower = FindProperty("_ReflectionReflectionPower", props);
             ReflectionReflectionMask = FindProperty("_ReflectionReflectionMask", props);
             ReflectionNormalMix = FindProperty("_ReflectionNormalMix", props);
@@ -208,6 +211,7 @@ namespace ArktoonShaders
             OtherShadowAdjust = FindProperty("_OtherShadowAdjust", props);
             UseVertexLight = FindProperty("_UseVertexLight", props);
             if(isFade) ZWrite = FindProperty("_ZWrite", props);
+            // BackfaceColorMultiply = FindProperty("_BackfaceColorMultiply", props);
 
             EditorGUIUtility.labelWidth = 0f;
 
@@ -312,9 +316,9 @@ namespace ArktoonShaders
                     var useGloss = UseGloss.floatValue;
                     if(useGloss > 0)
                     {
-                        materialEditor.ShaderProperty(GlossBlend, "Blend");
-                        materialEditor.ShaderProperty(GlossBlendMask, "Blend Mask");
-                        materialEditor.ShaderProperty(GlossPower, "Power");
+                        materialEditor.ShaderProperty(GlossBlend, "Smoothness");
+                        materialEditor.ShaderProperty(GlossBlendMask, "Smoothness Mask");
+                        materialEditor.ShaderProperty(GlossPower, "Metallic");
                         materialEditor.ShaderProperty(GlossColor, "Color");
                     }
                     EditorGUI.indentLevel --;
@@ -366,6 +370,7 @@ namespace ArktoonShaders
                     var useReflection = UseReflection.floatValue;
                     if(useReflection > 0)
                     {
+                        materialEditor.ShaderProperty(UseReflectionProbe,"Use Reflection Probe");
                         materialEditor.ShaderProperty(ReflectionReflectionPower,"Blend");
                         materialEditor.ShaderProperty(ReflectionReflectionMask,"Blend Mask");
                         materialEditor.ShaderProperty(ReflectionNormalMix,"Normal Map mix");
@@ -493,6 +498,8 @@ namespace ArktoonShaders
                         EditorGUI.indentLevel --;
                     }
                     EditorGUI.indentLevel --;
+
+                    // materialEditor.ShaderProperty(BackfaceColorMultiply, "Backface Color Multiply (def:white)");
                 }
             }
             EditorGUI.EndChangeCheck();
