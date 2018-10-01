@@ -76,6 +76,7 @@ Shader "arktoon/Stencil/Writer/Cutout" {
         _MatcapColor ("[MatCap] Color", Color) = (1,1,1,1)
         // Reflection
         [Toggle(USE_REFLECTION)]_UseReflection ("[Reflection] Enabled", Float) = 0
+        [Toggle(USE_REFLECTION_PROBE)]_UseReflectionProbe ("[Reflection] Use Reflection Probe", Float) = 0
         _ReflectionReflectionPower ("[Reflection] Reflection Power", Range(0, 1)) = 1
         _ReflectionReflectionMask ("[Reflection] Reflection Mask", 2D) = "white" {}
         _ReflectionNormalMix ("[Reflection] Normal Map Mix", Range(0,2)) = 1
@@ -108,6 +109,8 @@ Shader "arktoon/Stencil/Writer/Cutout" {
         _OtherShadowBorderSharpness ("[Advanced] Other Mesh Shadow Border Sharpness", Range(1, 5)) = 3
         // Per-vertex light switching
         [Toggle(USE_VERTEX_LIGHT)]_UseVertexLight("[Advanced] Use Per-vertex Lighting", Float) = 1
+        // Backface Color Multiply
+        // _BackfaceColorMultiply ("[Advancced] Backface Color Multiply", Color) = (1,1,1,1)
     }
     SubShader {
         Tags {
@@ -132,6 +135,7 @@ Shader "arktoon/Stencil/Writer/Cutout" {
             #pragma shader_feature USE_GLOSS
             #pragma shader_feature USE_MATCAP
             #pragma shader_feature USE_REFLECTION
+            #pragma shader_feature USE_REFLECTION_PROBE
             #pragma shader_feature USE_RIM
             #pragma shader_feature USE_SHADOWCAP
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE
