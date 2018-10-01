@@ -108,3 +108,35 @@ VertexOutput vert (appdata_full v) {
     #endif
     return o;
 }
+
+
+float3 GetIndirectSpecular(float3 lightColor, float3 lightDirection, float3 normalDirection,float3 viewDirection,
+float3 viewReflectDirection, float attenuation, float roughness, float3 worldPos){
+    UnityLight light;
+    light.color = lightColor;
+    light.dir = lightDirection;
+    light.ndotl = max(0.0h,dot( normalDirection, lightDirection));
+
+    UnityGIInput d;
+    d.light = light;
+    d.worldPos = worldPos;
+    d.worldViewDir = viewDirection;
+    d.atten = attenuation;
+    d.ambient = 0.0h;
+
+    d.boxMax[0] = unity_SpecCube0_BoxMax;
+    d.boxMin[0] = unity_SpecCube0_BoxMin;
+    d.probePosition[0] = unity_SpecCube0_ProbePosition;
+    d.probeHDR[0] = unity_SpecCube0_HDR;
+    d.boxMax[1] = unity_SpecCube1_BoxMax;
+    d.boxMin[1] = unity_SpecCube1_BoxMin;
+    d.probePosition[1] = unity_SpecCube1_ProbePosition;
+    d.probeHDR[1] = unity_SpecCube1_HDR;
+
+    Unity_GlossyEnvironmentData ugls_en_data;
+    ugls_en_data.roughness = roughness;
+    ugls_en_data.reflUVW = viewReflectDirection;
+
+    float3 indirectSpecular = UnityGI_IndirectSpecular(d, 1.0h, ugls_en_data);
+    float3 indirectSpecular;
+}
