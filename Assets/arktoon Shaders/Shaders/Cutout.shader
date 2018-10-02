@@ -142,11 +142,12 @@ Shader "arktoon/AlphaCutout" {
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
+            #pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdbase_fullshadows
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
             #define ARKTOON_CUTOUT
 
             #include "cginc/arkludeVertOther.cginc"
@@ -171,37 +172,39 @@ Shader "arktoon/AlphaCutout" {
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
+            #pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdadd_fullshadows
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
             #define ARKTOON_CUTOUT
 
             #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
 
-        Pass {
-            Name "Outline"
-            Tags {
-            }
-            Cull Front
+        // Pass {
+        //     Name "Outline"
+        //     Tags {
+        //     }
+        //     Cull Front
 
-            CGPROGRAM
-            #pragma shader_feature USE_OUTLINE
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma fragmentoption ARB_precision_hint_fastest
-            #pragma multi_compile_shadowcaster
-            #pragma multi_compile_fog
-            #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
-            #define ARKTOON_CUTOUT
+        //     CGPROGRAM
+        //     #pragma shader_feature USE_OUTLINE
+        //     #pragma vertex vert
+        //     #pragma geometry geom
+        //     #pragma fragment frag
+        //     #pragma fragmentoption ARB_precision_hint_fastest
+        //     #pragma multi_compile_shadowcaster
+        //     #pragma multi_compile_fog
+        //     #pragma only_renderers d3d9 d3d11 glcore gles
+        //     #pragma target 5.0
+        //     #define ARKTOON_CUTOUT
 
-            #include "cginc/arkludeOutline.cginc"
-            ENDCG
-        }
+        //     #include "cginc/arkludeOutline.cginc"
+        //     ENDCG
+        // }
         Pass {
             Name "ShadowCaster"
             Tags {
@@ -219,7 +222,7 @@ Shader "arktoon/AlphaCutout" {
             #pragma multi_compile_shadowcaster
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
             uniform float _CutoutCutoutAdjust;
             uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
             uniform float4 _Color;

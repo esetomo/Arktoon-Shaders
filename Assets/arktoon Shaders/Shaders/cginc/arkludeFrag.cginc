@@ -77,8 +77,10 @@ half3 GetSHLength ()
     return x + x1;
 }
 
-float4 frag(VertexOutput i, float facing : VFACE) : COLOR {
+float4 frag(VertexOutput i) : COLOR {
     // float isBackFace = ( facing >= 0 ? 0 : 1 );
+    float isFrontFace = ( i.is_outline == 1 ? 0 : 1 );
+    float faceSign = ( i.is_outline == 1 ? -1 : 1 );
     // i.normalDir = normalize(i.normalDir);
     float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
     float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
@@ -291,7 +293,12 @@ float4 frag(VertexOutput i, float facing : VFACE) : COLOR {
     #ifdef USE_RIM
         float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
         float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
-        float3 RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )*pow(1.0-max(0,dot(normalDirection, viewDirection)),_RimFresnelPower)*_RimBlend*_RimColor.rgb*_RimBlendMask_var*lerp(float3(1,1,1), finalLight,_RimShadeMix));
+        float3 RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )
+                          * pow(1.0-max(0,dot(normalDirection * faceSign, viewDirection)),_RimFresnelPower)
+                          * _RimBlend
+                          * _RimColor.rgb
+                          * _RimBlendMask_var
+                          * lerp(float3(1,1,1), finalLight,_RimShadeMix));
     #else
         float3 RimLight = float3(0,0,0);
     #endif

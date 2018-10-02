@@ -41,31 +41,178 @@ uniform float _ShadowCapNormalMix;
 
 uniform float _VertexColorBlendDiffuse;
 
-struct VertexOutput {
-    float4 pos : SV_POSITION;
-    float2 uv0 : TEXCOORD0;
-    float4 posWorld : TEXCOORD1;
-    float3 normalDir : TEXCOORD2;
-    float3 tangentDir : TEXCOORD3;
-    float3 bitangentDir : TEXCOORD4;
-    LIGHTING_COORDS(5,6)
-    UNITY_FOG_COORDS(7)
+// struct VertexOutput {
+//     float4 pos : SV_POSITION;
+//     float2 uv0 : TEXCOORD0;
+//     float4 posWorld : TEXCOORD1;
+//     float3 normalDir : TEXCOORD2;
+//     float3 tangentDir : TEXCOORD3;
+//     float3 bitangentDir : TEXCOORD4;
+//     LIGHTING_COORDS(5,6)
+//     UNITY_FOG_COORDS(7)
+//     fixed4 color : COLOR;
+// };
+
+// VertexOutput vert (appdata_full v) {
+//     VertexOutput o = (VertexOutput)0;
+//     o.uv0 = v.texcoord;
+//     o.color = v.color;
+//     o.normalDir = UnityObjectToWorldNormal(v.normal);
+//     o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
+//     o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
+//     o.posWorld = mul(unity_ObjectToWorld, v.vertex);
+//     o.pos = UnityObjectToClipPos( v.vertex );
+//     UNITY_TRANSFER_FOG(o,o.pos);
+//     TRANSFER_VERTEX_TO_FRAGMENT(o)
+//     return o;
+// }
+
+
+struct v2g
+{
+	float4 vertex : POSITION;
+	float3 normal : NORMAL;
+	float4 tangent : TANGENT;
+	float2 uv0 : TEXCOORD0;
+	float4 posWorld : TEXCOORD2;
+	float3 normalDir : TEXCOORD3;
+	float3 tangentDir : TEXCOORD4;
+	float3 bitangentDir : TEXCOORD5;
+	float4 pos : CLIP_POS;
+	SHADOW_COORDS(6)
+	UNITY_FOG_COORDS(7)
     fixed4 color : COLOR;
 };
 
-VertexOutput vert (appdata_full v) {
-    VertexOutput o = (VertexOutput)0;
-    o.uv0 = v.texcoord;
+
+v2g vert(appdata_full v) {
+	v2g o;
+	o.uv0 = v.texcoord;
+	o.normal = v.normal;
+	o.tangent = v.tangent;
     o.color = v.color;
-    o.normalDir = UnityObjectToWorldNormal(v.normal);
-    o.tangentDir = normalize( mul( unity_ObjectToWorld, float4( v.tangent.xyz, 0.0 ) ).xyz );
-    o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
-    o.posWorld = mul(unity_ObjectToWorld, v.vertex);
-    o.pos = UnityObjectToClipPos( v.vertex );
-    UNITY_TRANSFER_FOG(o,o.pos);
-    TRANSFER_VERTEX_TO_FRAGMENT(o)
+	o.normalDir = normalize(UnityObjectToWorldNormal(v.normal));
+	o.tangentDir = normalize(mul(unity_ObjectToWorld, float4(v.tangent.xyz, 0.0)).xyz);
+	o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
+	float4 objPos = mul(unity_ObjectToWorld, float4(0, 0, 0, 1));
+	o.posWorld = mul(unity_ObjectToWorld, v.vertex);
+	float3 lightColor = _LightColor0.rgb;
+	o.vertex = v.vertex;
+	o.pos = UnityObjectToClipPos(v.vertex);
+	TRANSFER_SHADOW(o);
+	UNITY_TRANSFER_FOG(o, o.pos);
+
     return o;
 }
+
+
+
+// struct v2g
+// {
+// 	float4 vertex : POSITION;
+// 	float3 normal : NORMAL;
+// 	float4 tangent : TANGENT;
+// 	float2 uv0 : TEXCOORD0;
+// 	float2 uv1 : TEXCOORD1;
+// 	float4 posWorld : TEXCOORD2;
+// 	float3 normalDir : TEXCOORD3;
+// 	float3 tangentDir : TEXCOORD4;
+// 	float3 bitangentDir : TEXCOORD5;
+// 	float4 pos : CLIP_POS;
+// 	SHADOW_COORDS(6)
+// 	UNITY_FOG_COORDS(7)
+//     fixed4 color : COLOR;
+//     float3 lightColor0 : LIGHT_COLOR0;
+//     float3 lightColor1 : LIGHT_COLOR1;
+//     float3 lightColor2 : LIGHT_COLOR2;
+//     float3 lightColor3 : LIGHT_COLOR3;
+//     float4 ambientAttenuation : AMBIENT_ATTEN;
+//     float4 ambientIndirect : AMBIENT_INDIRECT;
+// };
+
+
+struct VertexOutput {
+    float4 pos : SV_POSITION;
+    float2 uv0 : TEXCOORD0;
+    float4 posWorld : TEXCOORD2;
+    float3 normalDir : TEXCOORD3;
+    float3 tangentDir : TEXCOORD4;
+    float3 bitangentDir : TEXCOORD5;
+    fixed4 col : COLOR0;
+	bool is_outline : IS_OUTLINE;
+    SHADOW_COORDS(6)
+    UNITY_FOG_COORDS(7)
+    fixed4 color : COLOR1;
+};
+
+uniform float _Shadow;
+uniform float _Cutoff;
+uniform float _outline_width;
+uniform float4 _outline_color;
+
+[maxvertexcount(6)]
+void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
+{
+	VertexOutput o;
+	#if 1
+	for (int i = 2; i >= 0; i--)
+	{
+		o.pos = UnityObjectToClipPos(IN[i].vertex + normalize(IN[i].normal) * (0 * .01));
+		o.uv0 = IN[i].uv0;
+		o.col = fixed4( _outline_color.r, _outline_color.g, _outline_color.b, 1);
+        o.color = IN[i].color;
+		o.posWorld = mul(unity_ObjectToWorld, IN[i].vertex);
+		o.normalDir = UnityObjectToWorldNormal(IN[i].normal);
+		o.tangentDir = IN[i].tangentDir;
+		o.bitangentDir = IN[i].bitangentDir;
+		o.posWorld = mul(unity_ObjectToWorld, IN[i].vertex);
+		o.is_outline = true;
+
+		// Pass-through the shadow coordinates if this pass has shadows.
+		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)
+		o._ShadowCoord = IN[i]._ShadowCoord;
+		#endif
+
+		// Pass-through the fog coordinates if this pass has shadows.
+		#if defined(FOG_LINEAR) || defined(FOG_EXP) || defined(FOG_EXP2)
+		o.fogCoord = IN[i].fogCoord;
+		#endif
+
+		tristream.Append(o);
+	}
+
+	tristream.RestartStrip();
+	#endif
+
+	for (int ii = 0; ii < 3; ii++)
+	{
+		o.pos = UnityObjectToClipPos(IN[ii].vertex);
+		o.uv0 = IN[ii].uv0;
+		o.col = fixed4(1., 1., 1., 0.);
+        o.color = IN[ii].color;
+		o.posWorld = mul(unity_ObjectToWorld, IN[ii].vertex);
+		o.normalDir = UnityObjectToWorldNormal(IN[ii].normal);
+		o.tangentDir = IN[ii].tangentDir;
+		o.bitangentDir = IN[ii].bitangentDir;
+		o.posWorld = mul(unity_ObjectToWorld, IN[ii].vertex);
+		o.is_outline = false;
+
+		// Pass-through the shadow coordinates if this pass has shadows.
+		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)
+		o._ShadowCoord = IN[ii]._ShadowCoord;
+		#endif
+
+		// Pass-through the fog coordinates if this pass has shadows.
+		#if defined(FOG_LINEAR) || defined(FOG_EXP) || defined(FOG_EXP2)
+		o.fogCoord = IN[ii].fogCoord;
+		#endif
+
+		tristream.Append(o);
+	}
+
+	tristream.RestartStrip();
+}
+
 
 float4 frag(VertexOutput i) : COLOR {
     i.normalDir = normalize(i.normalDir);

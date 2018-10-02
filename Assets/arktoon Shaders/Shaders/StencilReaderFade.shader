@@ -144,11 +144,12 @@ Shader "arktoon/Stencil/Reader/Fade" {
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
+            #pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdbase
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
             #define ARKTOON_FADE
 
             #include "cginc/arkludeVertOther.cginc"
@@ -179,11 +180,12 @@ Shader "arktoon/Stencil/Reader/Fade" {
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
+            #pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdadd
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
             #define ARKTOON_FADE
 
             #include "cginc/arkludeAdd.cginc"

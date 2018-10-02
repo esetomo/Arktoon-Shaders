@@ -139,11 +139,12 @@ Shader "arktoon/Opaque" {
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
+            #pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdbase_fullshadows
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
 
             #include "cginc/arkludeVertOther.cginc"
             #include "cginc/arkludeFrag.cginc"
@@ -167,35 +168,36 @@ Shader "arktoon/Opaque" {
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
+			#pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdadd_fullshadows
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
 
             #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
 
-        Pass {
-            Name "Outline"
-            Tags {
-            }
-            Cull Front
+        // Pass {
+        //     Name "Outline"
+        //     Tags {
+        //     }
+        //     Cull Front
 
-            CGPROGRAM
-            #pragma shader_feature USE_OUTLINE
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma fragmentoption ARB_precision_hint_fastest
-            #pragma multi_compile_shadowcaster
-            #pragma multi_compile_fog
-            #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+        //     CGPROGRAM
+        //     #pragma shader_feature USE_OUTLINE
+        //     #pragma vertex vert
+        //     #pragma fragment frag
+        //     #pragma fragmentoption ARB_precision_hint_fastest
+        //     #pragma multi_compile_shadowcaster
+        //     #pragma multi_compile_fog
+        //     #pragma only_renderers d3d9 d3d11 glcore gles
+        //     #pragma target 5.0
 
-            #include "cginc/arkludeOutline.cginc"
-            ENDCG
-        }
+        //     #include "cginc/arkludeOutline.cginc"
+        //     ENDCG
+        // }
     }
     FallBack "Standard"
     CustomEditor "ArktoonShaders.ArktoonInspector"
