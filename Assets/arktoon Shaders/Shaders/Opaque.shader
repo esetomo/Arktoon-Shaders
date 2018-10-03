@@ -6,8 +6,8 @@
 // 詳細はLICENSEか、https://opensource.org/licenses/mit-license.php を参照してください。
 Shader "arktoon/Opaque" {
     Properties {
-        // Culling
-        [Enum(UnityEngine.Rendering.CullMode)]_Cull("[Advanced] Cull", Float) = 2 // Back
+        // Double Sided
+        [Toggle(DOUBLE_SIDED)]_UseDoubleSided ("Double Sided", Float ) = 0
         // Common
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
         _Color ("[Common] Base Color", Color) = (1,1,1,1)
@@ -59,9 +59,9 @@ Shader "arktoon/Opaque" {
         _GlossColor ("[Gloss] Color", Color) = (1,1,1,1)
         // Outline
         [Toggle(USE_OUTLINE)]_UseOutline ("[Outline] Enabled", Float) = 0
-        _OutlineWidth ("[Outline] Width", Range(0, 0.03)) = 0.0005
-        _OutlineWidthMask ("[Outline] Width Mask", 2D) = "white" {}
+        _OutlineWidth ("[Outline] Width", Range(0, 10)) = 0.05
         _OutlineColor ("[Outline] Color", Color) = (0,0,0,1)
+        _OutlineShadeMix ("[Outline] Shade Mix", Range(0, 1)) = 0
         _OutlineTextureColorRate ("[Outline] Texture Color Rate", Range(0, 1)) = 0.05
         // MatCap
         [Toggle(USE_MATCAP)]_UseMatcap ("[MatCap] Enabled", Float) = 0
@@ -118,7 +118,7 @@ Shader "arktoon/Opaque" {
             Tags {
                 "LightMode"="ForwardBase"
             }
-            Cull [_Cull]
+            Cull Back
 
             CGPROGRAM
             #pragma shader_feature USE_SHADE_TEXTURE
@@ -134,6 +134,8 @@ Shader "arktoon/Opaque" {
             #pragma shader_feature USE_CUSTOM_SHADOW_2ND
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE_2ND
             #pragma shader_feature USE_VERTEX_LIGHT
+            #pragma shader_feature USE_OUTLINE
+            #pragma shader_feature DOUBLE_SIDED
 
             #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
@@ -155,7 +157,7 @@ Shader "arktoon/Opaque" {
             Tags {
                 "LightMode"="ForwardAdd"
             }
-            Cull [_Cull]
+            Cull Back
             Blend One One
 
             CGPROGRAM
@@ -164,6 +166,8 @@ Shader "arktoon/Opaque" {
             #pragma shader_feature USE_RIM
             #pragma shader_feature USE_MATCAP
             #pragma shader_feature USE_POINT_SHADOW_STEPS
+            #pragma shader_feature USE_OUTLINE
+            #pragma shader_feature DOUBLE_SIDED
             #pragma multi_compile _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
@@ -178,26 +182,6 @@ Shader "arktoon/Opaque" {
             #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
-
-        // Pass {
-        //     Name "Outline"
-        //     Tags {
-        //     }
-        //     Cull Front
-
-        //     CGPROGRAM
-        //     #pragma shader_feature USE_OUTLINE
-        //     #pragma vertex vert
-        //     #pragma fragment frag
-        //     #pragma fragmentoption ARB_precision_hint_fastest
-        //     #pragma multi_compile_shadowcaster
-        //     #pragma multi_compile_fog
-        //     #pragma only_renderers d3d9 d3d11 glcore gles
-        //     #pragma target 5.0
-
-        //     #include "cginc/arkludeOutline.cginc"
-        //     ENDCG
-        // }
     }
     FallBack "Standard"
     CustomEditor "ArktoonShaders.ArktoonInspector"

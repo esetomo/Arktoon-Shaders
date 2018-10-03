@@ -139,6 +139,7 @@ struct VertexOutput {
     float3 bitangentDir : TEXCOORD5;
     fixed4 col : COLOR0;
 	bool is_outline : IS_OUTLINE;
+    bool is_backface : IS_BACKFACE;
     SHADOW_COORDS(6)
     UNITY_FOG_COORDS(7)
     fixed4 color : COLOR1;
@@ -175,21 +176,19 @@ struct VertexOutput {
 // };
 
 
-uniform float _Shadow;
-uniform float _Cutoff;
-uniform float _outline_width;
-uniform float4 _outline_color;
+uniform float _OutlineWidth;
+uniform float4 _OutlineColor;
 
-[maxvertexcount(6)]
+[maxvertexcount(9)]
 void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 {
 	VertexOutput o;
-	#if 1
+	#ifdef USE_OUTLINE
 	for (int i = 2; i >= 0; i--)
 	{
-		o.pos = UnityObjectToClipPos(IN[i].vertex + normalize(IN[i].normal) * (0 * .01));
+		o.pos = UnityObjectToClipPos(IN[i].vertex + normalize(IN[i].normal) * (_OutlineWidth * .01));
 		o.uv0 = IN[i].uv0;
-		o.col = fixed4( _outline_color.r, _outline_color.g, _outline_color.b, 1);
+		o.col = fixed4( _OutlineColor.r, _OutlineColor.g, _OutlineColor.b, 1);
         o.color = IN[i].color;
 		o.posWorld = mul(unity_ObjectToWorld, IN[i].vertex);
 		o.normalDir = UnityObjectToWorldNormal(IN[i].normal);
@@ -197,6 +196,7 @@ void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 		o.bitangentDir = IN[i].bitangentDir;
 		o.posWorld = mul(unity_ObjectToWorld, IN[i].vertex);
 		o.is_outline = true;
+        o.is_backface = false;
 
 		// Pass-through the shadow coordinates if this pass has shadows.
 		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)
@@ -221,6 +221,44 @@ void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 	tristream.RestartStrip();
 	#endif
 
+	#ifdef DOUBLE_SIDED
+	for (int iii = 2; iii >= 0; iii--)
+	{
+		o.pos = UnityObjectToClipPos(IN[iii].vertex);
+		o.uv0 = IN[iii].uv0;
+		o.col = fixed4(1., 1., 1., 0.);
+        o.color = IN[iii].color;
+		o.posWorld = mul(unity_ObjectToWorld, IN[iii].vertex);
+		o.normalDir = UnityObjectToWorldNormal(IN[iii].normal);
+		o.tangentDir = IN[iii].tangentDir;
+		o.bitangentDir = IN[iii].bitangentDir;
+		o.posWorld = mul(unity_ObjectToWorld, IN[iii].vertex);
+		o.is_outline = false;
+        o.is_backface = true;
+
+		// Pass-through the shadow coordinates if this pass has shadows.
+		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)
+		o._ShadowCoord = IN[iii]._ShadowCoord;
+		#endif
+
+		// Pass-through the fog coordinates if this pass has shadows.
+		#if defined(FOG_LINEAR) || defined(FOG_EXP) || defined(FOG_EXP2)
+		o.fogCoord = IN[iii].fogCoord;
+		#endif
+
+        o.lightColor0          = IN[iii].lightColor0;
+        o.lightColor1          = IN[iii].lightColor1;
+        o.lightColor2          = IN[iii].lightColor2;
+        o.lightColor3          = IN[iii].lightColor3;
+        o.ambientAttenuation   = IN[iii].ambientAttenuation;
+        o.ambientIndirect      = IN[iii].ambientIndirect;
+
+		tristream.Append(o);
+	}
+
+	tristream.RestartStrip();
+	#endif
+
 	for (int ii = 0; ii < 3; ii++)
 	{
 		o.pos = UnityObjectToClipPos(IN[ii].vertex);
@@ -233,6 +271,7 @@ void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 		o.bitangentDir = IN[ii].bitangentDir;
 		o.posWorld = mul(unity_ObjectToWorld, IN[ii].vertex);
 		o.is_outline = false;
+        o.is_backface = false;
 
 		// Pass-through the shadow coordinates if this pass has shadows.
 		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)
