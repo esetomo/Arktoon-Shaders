@@ -66,19 +66,6 @@ uniform float _OtherShadowBorderSharpness;
 uniform float _OutlineTextureColorRate;
 uniform float _OutlineShadeMix;
 
-// SH変数群から最大光量を取得
-half3 GetSHLength ()
-{
-    half3 x, x1;
-    x.r = length(unity_SHAr);
-    x.g = length(unity_SHAg);
-    x.b = length(unity_SHAb);
-    x1.r = length(unity_SHBr);
-    x1.g = length(unity_SHBg);
-    x1.b = length(unity_SHBb);
-    return x + x1;
-}
-
 float4 frag(VertexOutput i) : COLOR {
     // float isBackFace = ( facing >= 0 ? 0 : 1 );
     float isFrontFace = ( i.is_backface == 1 ? 0 : 1 );

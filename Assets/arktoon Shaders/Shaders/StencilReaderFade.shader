@@ -159,7 +159,8 @@ Shader "arktoon/Stencil/Reader/Fade" {
             #pragma target 5.0
             #define ARKTOON_FADE
 
-            #include "cginc/arkludeVertOther.cginc"
+            #include "cginc/arkludeOther.cginc"
+            #include "cginc/arkludeVertGeom.cginc"
             #include "cginc/arkludeFrag.cginc"
             ENDCG
         }
@@ -196,10 +197,37 @@ Shader "arktoon/Stencil/Reader/Fade" {
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 5.0
             #define ARKTOON_FADE
+            #define ARKTOON_ADD
 
+            #include "cginc/arkludeOther.cginc"
+            #include "cginc/arkludeVertGeom.cginc"
             #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
+
+		// ------------------------------------------------------------------
+		//  Shadow rendering pass
+		Pass {
+			Name "SHADOWCASTER"
+			Tags { "LightMode" = "ShadowCaster" }
+
+			ZWrite On ZTest LEqual
+
+			CGPROGRAM
+			#pragma target 3.0
+
+			// -------------------------------------
+
+			#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+			#pragma multi_compile_shadowcaster
+
+			#pragma vertex vertShadowCaster
+			#pragma fragment fragShadowCaster
+
+            #include "cginc/arkludeFadeShadowCaster.cginc"
+
+			ENDCG
+		}
     }
     FallBack "Standard"
     CustomEditor "ArktoonShaders.ArktoonInspector"

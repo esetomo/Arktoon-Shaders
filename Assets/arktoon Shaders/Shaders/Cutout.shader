@@ -151,7 +151,8 @@ Shader "arktoon/AlphaCutout" {
             #pragma target 5.0
             #define ARKTOON_CUTOUT
 
-            #include "cginc/arkludeVertOther.cginc"
+            #include "cginc/arkludeOther.cginc"
+            #include "cginc/arkludeVertGeom.cginc"
             #include "cginc/arkludeFrag.cginc"
             ENDCG
         }
@@ -182,7 +183,10 @@ Shader "arktoon/AlphaCutout" {
             #pragma only_renderers d3d9 d3d11 glcore gles
             #pragma target 5.0
             #define ARKTOON_CUTOUT
+            #define ARKTOON_ADD
 
+            #include "cginc/arkludeOther.cginc"
+            #include "cginc/arkludeVertGeom.cginc"
             #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
