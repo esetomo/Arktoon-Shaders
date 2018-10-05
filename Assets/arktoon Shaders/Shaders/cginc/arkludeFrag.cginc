@@ -39,6 +39,7 @@ uniform float _MatcapNormalMix;
 uniform float _MatcapShadeMix;
 uniform float _ReflectionRoughness;
 uniform float _ReflectionReflectionPower;
+uniform float _ReflectionSuppressBaseColorValue;
 uniform sampler2D _ReflectionReflectionMask; uniform float4 _ReflectionReflectionMask_ST;
 uniform float _ReflectionNormalMix;
 uniform float _ReflectionShadeMix;
@@ -204,6 +205,7 @@ float4 frag(VertexOutput i) : COLOR {
             #ifdef USE_REFLECTION_PROBE
                 float _ReflectionSmoothnessMask_var = tex2D(_ReflectionReflectionMask,TRANSFORM_TEX(i.uv0, _ReflectionReflectionMask));
                 float reflectionSmoothness = _ReflectionReflectionPower*_ReflectionSmoothnessMask_var;
+                float perceptualRoughnessRefl = 1.0 - _ReflectionReflectionPower;
                 float3 reflDir = reflect(-viewDirection, normalDirection);
                 float roughnessRefl = SmoothnessToRoughness(reflectionSmoothness);
                 float3 indirectSpecular = GetIndirectSpecular(lightColor, lightDirection,
@@ -215,14 +217,14 @@ float4 frag(VertexOutput i) : COLOR {
                 diffuseColorRefl = DiffuseAndSpecularFromMetallic( diffuseColorRefl, specularColorRefl, specularColorRefl, specularMonochromeRefl );
                 specularMonochromeRefl = 1.0-specularMonochromeRefl;
                 half grazingTermRefl = saturate( reflectionSmoothness + specularMonochromeRefl );
-                half surfaceReduction; // あとでReflectionのところで使う予定
                 #ifdef UNITY_COLORSPACE_GAMMA
-                    surfaceReduction = 1.0-0.28*roughness*perceptualRoughness;
+                    half surfaceReduction = 1.0-0.28*roughness*perceptualRoughnessRefl;
                 #else
-                    surfaceReduction = 1.0/(roughnessRefl*roughnessRefl + 1.0);
+                    half surfaceReduction = 1.0/(roughnessRefl*roughnessRefl + 1.0);
                 #endif
                 indirectSpecular *= FresnelLerp (specularColorRefl, grazingTermRefl, NdotV);
                 indirectSpecular *= surfaceReduction;
+                ToonedMap = lerp(ToonedMap,ToonedMap * (1-surfaceReduction), _ReflectionSuppressBaseColorValue);
                 ReflectionMap = indirectSpecular;
             #else
                 float3 normalDirectionReflection = normalize(mul( float3(normalLocal.r*_ReflectionNormalMix, normalLocal.g*_ReflectionNormalMix, normalLocal.b), tangentTransform )); // Perturbed normals

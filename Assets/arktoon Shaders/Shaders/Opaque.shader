@@ -81,6 +81,7 @@ Shader "arktoon/Opaque" {
         _ReflectionShadeMix ("[Reflection] Shade Mix", Range(0, 1)) = 0
         _ReflectionCubemap ("[Reflection] Cubemap", Cube) = "_Skybox" {}
         _ReflectionRoughness ("[Reflection] Roughness", Range(0, 1)) = 0
+        _ReflectionSuppressBaseColorValue ("[Reflection] Suppress Base Color", Range(0, 1)) = 0.5
         // Rim
         [Toggle(USE_RIM)]_UseRim ("[Rim] Enabled", Float) = 0
         _RimBlend ("[Rim] Blend", Range(0, 3)) = 1

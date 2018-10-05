@@ -6,9 +6,8 @@
 
 uniform sampler2D _MainTex; uniform float4 _MainTex_ST;
 uniform float4 _Color;
-uniform float _CutoutCutoutAdjust;
 
-#define _ALPHABLEND_ON 1
+#define _ALPHABLEND_ON
 
 #if (SHADER_TARGET < 30) || defined(SHADER_API_GLES) || defined(SHADER_API_D3D11_9X) || defined (SHADER_API_PSP2)
     #undef UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS
@@ -18,7 +17,7 @@ uniform float _CutoutCutoutAdjust;
     #define UNITY_STANDARD_USE_DITHER_MASK 1
 #endif
 
-#if defined(_ALPHATEST_ON) || defined(_ALPHABLEND_ON) || defined(_ALPHAPREMULTIPLY_ON)
+#if defined(_ALPHABLEND_ON) || defined(_ALPHAPREMULTIPLY_ON)
 #define UNITY_STANDARD_USE_SHADOW_UVS 1
 #endif
 
@@ -26,7 +25,6 @@ uniform float _CutoutCutoutAdjust;
 #define UNITY_STANDARD_USE_SHADOW_OUTPUT_STRUCT 1
 #endif
 
-float4      _BaseTex_ST;
 #ifdef UNITY_STANDARD_USE_DITHER_MASK
 sampler3D   _DitherMaskLOD;
 #endif
@@ -49,7 +47,6 @@ struct VertexOutputShadowCaster
 // We have to do these dances of outputting SV_POSITION separately from the vertex shader,
 // and inputting VPOS in the pixel shader, since they both map to "POSITION" semantic on
 // some platforms, and then things don't go well.
-
 
 void vertShadowCaster (VertexInputS v,
     #ifdef UNITY_STANDARD_USE_SHADOW_OUTPUT_STRUCT
@@ -77,12 +74,8 @@ half4 fragShadowCaster (
     ) : SV_Target
 {
     #if defined(UNITY_STANDARD_USE_SHADOW_UVS)
-
         float4 _MainTex_var = tex2D(_MainTex, i.tex);
         half alpha = _MainTex_var.a*_Color.a;
-        #if defined(_ALPHATEST_ON)
-            clip (alpha - _CutoutCutoutAdjust);
-        #endif
         #if defined(_ALPHABLEND_ON) || defined(_ALPHAPREMULTIPLY_ON)
             #if defined(UNITY_STANDARD_USE_DITHER_MASK)
                 half alphaRef = tex3D(_DitherMaskLOD, float3(vpos.xy*0.25,alpha*0.9375)).a;
@@ -91,10 +84,8 @@ half4 fragShadowCaster (
 				clip (alpha - _CutoutCutoutAdjust);
 			#endif
         #endif
-    #endif // #if defined(UNITY_STANDARD_USE_SHADOW_UVS)
-
+    #endif
     SHADOW_CASTER_FRAGMENT(i)
 }
-
 
 #endif
