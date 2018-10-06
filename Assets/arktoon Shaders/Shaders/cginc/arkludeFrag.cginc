@@ -96,10 +96,18 @@ float4 frag(VertexOutput i) : COLOR {
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
     #endif
 
-    // 明るい部分と暗い部分をサンプリング・グレースケールでリマッピングして全面の光量を再計算
-    float3 ShadeSH9Plus = GetSHLength();
+    // 光源サンプリング方法
+    #ifdef _LIGHTSAMPLING_ARKTOON
+        // 明るい部分と暗い部分をサンプリング・グレースケールでリマッピングして全面の光量を再計算
+        float3 ShadeSH9Plus = GetSHLength();
+        float3 ShadeSH9Minus = ShadeSH9(float4(0,0,0,1));
+    #elif _LIGHTSAMPLING_CUBED
+        // 空間上、真上を向いたときの光と真下を向いたときの光でサンプリング
+        float3 ShadeSH9Plus = ShadeSH9Direct();
+        float3 ShadeSH9Minus = ShadeSH9Indirect();
+    #endif
+
     float3 directLighting = saturate((ShadeSH9Plus+lightColor));
-    float3 ShadeSH9Minus = ShadeSH9(float4(0,0,0,1));
     ShadeSH9Minus *= _ShadowIndirectIntensity;
     float3 indirectLighting = saturate(ShadeSH9Minus);
 
