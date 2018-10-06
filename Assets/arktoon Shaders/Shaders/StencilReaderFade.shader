@@ -109,6 +109,8 @@ Shader "arktoon/Stencil/Reader/Fade" {
         _OtherShadowBorderSharpness ("[Advanced] Other Mesh Shadow Border Sharpness", Range(1, 5)) = 3
         // Per-vertex light switching
         [Toggle(USE_VERTEX_LIGHT)]_UseVertexLight("[Advanced] Use Per-vertex Lighting", Float) = 1
+        // Light Sampling
+        [KeywordEnum(Arktoon, Cubed)]_LightSampling("[Light] Sampling Style", Float) = 0
         // Backface Color Multiply
         // _BackfaceColorMultiply ("[Advancced] Backface Color Multiply", Color) = (1,1,1,1)
     }
@@ -150,6 +152,7 @@ Shader "arktoon/Stencil/Reader/Fade" {
 
             #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
+            #pragma multi_compile _LIGHTSAMPLING_ARKTOON _LIGHTSAMPLING_CUBED
 
             #pragma vertex vert
             #pragma geometry geom

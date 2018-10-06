@@ -107,6 +107,7 @@ namespace ArktoonShaders
         MaterialProperty OtherShadowAdjust;
         MaterialProperty UseVertexLight;
         MaterialProperty BackfaceColorMultiply;
+        MaterialProperty LightSampling;
 
         #endregion
 
@@ -218,6 +219,7 @@ namespace ArktoonShaders
             OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
             OtherShadowAdjust = FindProperty("_OtherShadowAdjust", props);
             UseVertexLight = FindProperty("_UseVertexLight", props);
+            LightSampling = FindProperty("_LightSampling", props);
             if(isFade) ZWrite = FindProperty("_ZWrite", props);
             // BackfaceColorMultiply = FindProperty("_BackfaceColorMultiply", props);
 
@@ -477,9 +479,18 @@ namespace ArktoonShaders
                     VertexColorBlendEmissive.floatValue = 0f;
                     UseVertexLight.floatValue = 1f;
                     material.EnableKeyword("USE_VERTEX_LIGHT");
+                    LightSampling.floatValue = 0f;
+                    material.EnableKeyword("_LIGHTSAMPLING_ARKTOON");
+                    material.DisableKeyword("_LIGHTSAMPLING_CUBED");
                 }
                 {
                     EditorGUI.indentLevel ++;
+                    EditorGUILayout.LabelField("Lights", EditorStyles.boldLabel);
+                    {
+                        EditorGUI.indentLevel ++;
+                        materialEditor.ShaderProperty(LightSampling, "Sampling Style (def:arktoon)");
+                        EditorGUI.indentLevel --;
+                    }
                     EditorGUILayout.LabelField("Directional Shadow", EditorStyles.boldLabel);
                     {
                         EditorGUI.indentLevel ++;
