@@ -97,7 +97,8 @@ namespace ArktoonShaders
         MaterialProperty ShadowCapTexture;
         MaterialProperty StencilNumber;
         MaterialProperty StencilCompareAction;
-        // MaterialProperty Cull;
+        MaterialProperty StencilMaskTex;
+        MaterialProperty StencilMaskAdjust;
         MaterialProperty UseDoubleSided;
         MaterialProperty ZWrite;
         MaterialProperty VertexColorBlendDiffuse;
@@ -122,6 +123,7 @@ namespace ArktoonShaders
             bool isCutout = shader.name.Contains("Cutout");
             bool isStencilWriter = shader.name.Contains("Stencil/Writer");
             bool isStencilReader = shader.name.Contains("Stencil/Reader");
+            bool isStencilWriterMask = shader.name.Contains("Stencil/WriterMask");
 
             // FindProperties
             BaseTexture = FindProperty("_MainTex", props);
@@ -206,6 +208,8 @@ namespace ArktoonShaders
             ShadowCapNormalMix = FindProperty("_ShadowCapNormalMix", props);
             ShadowCapTexture = FindProperty("_ShadowCapTexture", props);
             if(isStencilWriter || isStencilReader) StencilNumber = FindProperty("_StencilNumber", props);
+            if(isStencilWriterMask) StencilMaskTex = FindProperty("_StencilMaskTex", props);
+            if(isStencilWriterMask) StencilMaskAdjust = FindProperty("_StencilMaskAdjust", props);
             if(isStencilReader) StencilCompareAction = FindProperty("_StencilCompareAction", props);
             // Cull = FindProperty("_Cull", props);
             UseDoubleSided = FindProperty("_UseDoubleSided", props);
@@ -353,7 +357,6 @@ namespace ArktoonShaders
                     var useMatcap = UseMatcap.floatValue;
                     if(useMatcap > 0)
                     {
-
                         materialEditor.ShaderProperty(MatcapBlendMode,"Blend Mode");
                         materialEditor.ShaderProperty(MatcapBlend,"Blend");
                         materialEditor.ShaderProperty(MatcapBlendMask,"Blend Mask");
@@ -438,6 +441,8 @@ namespace ArktoonShaders
                     {
                         EditorGUI.indentLevel++;
                         materialEditor.ShaderProperty(StencilNumber,"Number");
+                        if(isStencilWriterMask) materialEditor.ShaderProperty(StencilMaskTex, "Mask Texture");
+                        if(isStencilWriterMask) materialEditor.ShaderProperty(StencilMaskAdjust, "Mask Adjust");
                         EditorGUI.indentLevel--;
                     }
                 }
