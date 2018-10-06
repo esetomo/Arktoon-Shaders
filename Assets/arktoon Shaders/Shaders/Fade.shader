@@ -6,8 +6,8 @@
 // 詳細はLICENSEか、https://opensource.org/licenses/mit-license.php を参照してください。
 Shader "arktoon/Fade" {
     Properties {
-        // Culling
-        [Enum(UnityEngine.Rendering.CullMode)]_Cull("[Advanced] Cull", Float) = 2 // Back
+        // Double Sided
+        [Toggle(DOUBLE_SIDED)]_UseDoubleSided ("Double Sided", Float ) = 0
         [Enum(Off, 0, On, 1)]_ZWrite("ZWrite", Float) = 0
         // Common
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
@@ -51,13 +51,18 @@ Shader "arktoon/Fade" {
         _ShadowPlanB2ValueFromBase ("[Plan B-2] Value From Base", Range(0, 2)) = 1
         _ShadowPlanB2CustomShadowTexture ("[Plan B-2] Custom Shadow Texture", 2D) = "black" {}
         _ShadowPlanB2CustomShadowTextureRGB ("[Plan B-2] Custom Shadow Texture RGB", Color) = (1,1,1,1)
-
         // Gloss
         [Toggle(USE_GLOSS)]_UseGloss ("[Gloss] Enabled", Float) = 0
         _GlossBlend ("[Gloss] Smoothness", Range(0, 1)) = 0.5
         _GlossBlendMask ("[Gloss] Smoothness Mask", 2D) = "white" {}
         _GlossPower ("[Gloss] Metallic", Range(0, 1)) = 0.5
         _GlossColor ("[Gloss] Color", Color) = (1,1,1,1)
+        // Outline
+        [Toggle(USE_OUTLINE)]_UseOutline ("[Outline] Enabled", Float) = 0
+        _OutlineWidth ("[Outline] Width", Range(0, 10)) = 0.05
+        _OutlineColor ("[Outline] Color", Color) = (0,0,0,1)
+        _OutlineShadeMix ("[Outline] Shade Mix", Range(0, 1)) = 0
+        _OutlineTextureColorRate ("[Outline] Texture Color Rate", Range(0, 1)) = 0.05
         // MatCap
         [Toggle(USE_MATCAP)]_UseMatcap ("[MatCap] Enabled", Float) = 0
         [KeywordEnum(Add, Lighten, Screen)] _MatcapBlendMode ("[MatCap] Blend Mode", Float) = 0
@@ -76,6 +81,7 @@ Shader "arktoon/Fade" {
         _ReflectionShadeMix ("[Reflection] Shade Mix", Range(0, 1)) = 0
         _ReflectionCubemap ("[Reflection] Cubemap", Cube) = "_Skybox" {}
         _ReflectionRoughness ("[Reflection] Roughness", Range(0, 1)) = 0
+        _ReflectionSuppressBaseColorValue ("[Reflection] Suppress Base Color", Range(0, 1)) = 0.5
         // Rim
         [Toggle(USE_RIM)]_UseRim ("[Rim] Enabled", Float) = 0
         _RimBlend ("[Rim] Blend", Range(0, 3)) = 1
@@ -113,7 +119,7 @@ Shader "arktoon/Fade" {
             Tags {
                 "LightMode"="ForwardBase"
             }
-            Cull [_Cull]
+            Cull Back
             Blend SrcAlpha OneMinusSrcAlpha
             ZWrite [_ZWrite]
 
@@ -131,19 +137,23 @@ Shader "arktoon/Fade" {
             #pragma shader_feature USE_CUSTOM_SHADOW_2ND
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE_2ND
             #pragma shader_feature USE_VERTEX_LIGHT
+            #pragma shader_feature USE_OUTLINE
+            #pragma shader_feature DOUBLE_SIDED
 
             #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 
             #pragma vertex vert
+            #pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdbase
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
             #define ARKTOON_FADE
 
-            #include "cginc/arkludeVertOther.cginc"
+            #include "cginc/arkludeOther.cginc"
+            #include "cginc/arkludeVertGeom.cginc"
             #include "cginc/arkludeFrag.cginc"
             ENDCG
         }
@@ -152,7 +162,7 @@ Shader "arktoon/Fade" {
             Tags {
                 "LightMode"="ForwardAdd"
             }
-            Cull [_Cull]
+            Cull Back
             Blend One One
             ZWrite [_ZWrite]
 
@@ -164,18 +174,48 @@ Shader "arktoon/Fade" {
             #pragma shader_feature USE_POINT_SHADOW_STEPS
             #pragma multi_compile _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
+            #pragma shader_feature USE_OUTLINE
+            #pragma shader_feature DOUBLE_SIDED
 
             #pragma vertex vert
+            #pragma geometry geom
             #pragma fragment frag
             #pragma multi_compile_fwdadd
             #pragma multi_compile_fog
             #pragma only_renderers d3d9 d3d11 glcore gles
-            #pragma target 3.0
+            #pragma target 5.0
             #define ARKTOON_FADE
+            #define ARKTOON_ADD
 
+            #include "cginc/arkludeOther.cginc"
+            #include "cginc/arkludeVertGeom.cginc"
             #include "cginc/arkludeAdd.cginc"
             ENDCG
         }
+
+		// ------------------------------------------------------------------
+		//  Shadow rendering pass
+		Pass {
+			Name "SHADOWCASTER"
+			Tags { "LightMode" = "ShadowCaster" }
+
+			ZWrite On ZTest LEqual
+
+			CGPROGRAM
+			#pragma target 3.0
+
+			// -------------------------------------
+
+			#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+			#pragma multi_compile_shadowcaster
+
+			#pragma vertex vertShadowCaster
+			#pragma fragment fragShadowCaster
+
+            #include "cginc/arkludeFadeShadowCaster.cginc"
+
+			ENDCG
+		}
     }
     FallBack "Standard"
     CustomEditor "ArktoonShaders.ArktoonInspector"

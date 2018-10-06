@@ -61,8 +61,8 @@ namespace ArktoonShaders
         MaterialProperty GlossColor;
         MaterialProperty UseOutline;
         MaterialProperty OutlineWidth;
-        MaterialProperty OutlineWidthMask;
         MaterialProperty OutlineColor;
+        MaterialProperty OutlineShadeMix;
         MaterialProperty OutlineTextureColorRate;
         MaterialProperty UseMatcap;
         MaterialProperty MatcapBlendMode;
@@ -80,6 +80,7 @@ namespace ArktoonShaders
         MaterialProperty ReflectionShadeMix;
         MaterialProperty ReflectionCubemap;
         MaterialProperty ReflectionRoughness;
+        MaterialProperty ReflectionSuppressBaseColorValue;
         MaterialProperty UseRim;
         MaterialProperty RimBlend;
         MaterialProperty RimBlendMask;
@@ -96,7 +97,8 @@ namespace ArktoonShaders
         MaterialProperty ShadowCapTexture;
         MaterialProperty StencilNumber;
         MaterialProperty StencilCompareAction;
-        MaterialProperty Cull;
+        // MaterialProperty Cull;
+        MaterialProperty UseDoubleSided;
         MaterialProperty ZWrite;
         MaterialProperty VertexColorBlendDiffuse;
         MaterialProperty VertexColorBlendEmissive;
@@ -167,11 +169,11 @@ namespace ArktoonShaders
             GlossBlendMask = FindProperty("_GlossBlendMask", props);
             GlossPower = FindProperty("_GlossPower", props);
             GlossColor = FindProperty("_GlossColor", props);
-            if(isOpaque || isCutout) UseOutline = FindProperty("_UseOutline", props);
-            if(isOpaque || isCutout) OutlineWidth = FindProperty("_OutlineWidth", props);
-            if(isOpaque || isCutout) OutlineWidthMask = FindProperty("_OutlineWidthMask", props);
-            if(isOpaque || isCutout) OutlineColor = FindProperty("_OutlineColor", props);
-            if(isOpaque || isCutout) OutlineTextureColorRate = FindProperty("_OutlineTextureColorRate", props);
+            UseOutline = FindProperty("_UseOutline", props);
+            OutlineWidth = FindProperty("_OutlineWidth", props);
+            OutlineColor = FindProperty("_OutlineColor", props);
+            OutlineShadeMix = FindProperty("_OutlineShadeMix", props);
+            OutlineTextureColorRate = FindProperty("_OutlineTextureColorRate", props);
             UseMatcap = FindProperty("_UseMatcap", props);
             MatcapBlendMode = FindProperty("_MatcapBlendMode", props);
             MatcapBlend = FindProperty("_MatcapBlend", props);
@@ -188,6 +190,7 @@ namespace ArktoonShaders
             ReflectionShadeMix = FindProperty("_ReflectionShadeMix", props);
             ReflectionCubemap = FindProperty("_ReflectionCubemap", props);
             ReflectionRoughness = FindProperty("_ReflectionRoughness", props);
+            ReflectionSuppressBaseColorValue = FindProperty("_ReflectionSuppressBaseColorValue", props);
             UseRim = FindProperty("_UseRim", props);
             RimBlend = FindProperty("_RimBlend", props);
             RimBlendMask = FindProperty("_RimBlendMask", props);
@@ -204,7 +207,8 @@ namespace ArktoonShaders
             ShadowCapTexture = FindProperty("_ShadowCapTexture", props);
             if(isStencilWriter || isStencilReader) StencilNumber = FindProperty("_StencilNumber", props);
             if(isStencilReader) StencilCompareAction = FindProperty("_StencilCompareAction", props);
-            Cull = FindProperty("_Cull", props);
+            // Cull = FindProperty("_Cull", props);
+            UseDoubleSided = FindProperty("_UseDoubleSided", props);
             VertexColorBlendDiffuse = FindProperty("_VertexColorBlendDiffuse", props);
             VertexColorBlendEmissive = FindProperty("_VertexColorBlendEmissive", props);
             OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
@@ -223,7 +227,8 @@ namespace ArktoonShaders
                     materialEditor.TexturePropertySingleLine(new GUIContent("Main Texture", "Base Color Texture (RGB)"), BaseTexture, BaseColor);
                     materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map", "Normal Map (RGB)"), Normalmap, BumpScale);
                     materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"), EmissionMap, EmissionColor);
-                    materialEditor.ShaderProperty(Cull, "Cull");
+                    // materialEditor.ShaderProperty(Cull, "Cull");
+                    materialEditor.ShaderProperty(UseDoubleSided, "Is Double Sided");
                     if(isFade) materialEditor.ShaderProperty(ZWrite, "ZWrite");
                     EditorGUI.indentLevel --;
                 }
@@ -324,22 +329,20 @@ namespace ArktoonShaders
                     EditorGUI.indentLevel --;
                 }
 
-                if(isOpaque || isCutout)  {
-                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-                    EditorGUILayout.LabelField("Outline", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                EditorGUILayout.LabelField("Outline", EditorStyles.boldLabel);
+                {
+                    EditorGUI.indentLevel++;
+                    materialEditor.ShaderProperty(UseOutline, "Use");
+                    var useOutline = UseOutline.floatValue;
+                    if(useOutline > 0)
                     {
-                        EditorGUI.indentLevel++;
-                        materialEditor.ShaderProperty(UseOutline, "Use");
-                        var useOutline = UseOutline.floatValue;
-                        if(useOutline > 0)
-                        {
-                            materialEditor.ShaderProperty(OutlineWidth,"Width");
-                            materialEditor.ShaderProperty(OutlineWidthMask,"Width Mask");
-                            materialEditor.ShaderProperty(OutlineColor,"Color");
-                            materialEditor.ShaderProperty(OutlineTextureColorRate,"Base Color Mix");
-                        }
-                        EditorGUI.indentLevel--;
+                        materialEditor.ShaderProperty(OutlineWidth,"Width");
+                        materialEditor.ShaderProperty(OutlineColor,"Color");
+                        materialEditor.ShaderProperty(OutlineShadeMix,"Shadow mix");
+                        materialEditor.ShaderProperty(OutlineTextureColorRate,"Base Color Mix");
                     }
+                    EditorGUI.indentLevel--;
                 }
 
                 EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
@@ -371,12 +374,23 @@ namespace ArktoonShaders
                     if(useReflection > 0)
                     {
                         materialEditor.ShaderProperty(UseReflectionProbe,"Use Reflection Probe");
-                        materialEditor.ShaderProperty(ReflectionReflectionPower,"Blend");
-                        materialEditor.ShaderProperty(ReflectionReflectionMask,"Blend Mask");
-                        materialEditor.ShaderProperty(ReflectionNormalMix,"Normal Map mix");
-                        materialEditor.ShaderProperty(ReflectionShadeMix, "Shadow mix");
-                        materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap");
-                        materialEditor.ShaderProperty(ReflectionRoughness,"Roughness");
+                        var useProbe = UseReflectionProbe.floatValue;
+
+                        EditorGUI.indentLevel++;
+                        if(useProbe <= 0)
+                        {
+                            materialEditor.ShaderProperty(ReflectionReflectionPower,"Blend");
+                            materialEditor.ShaderProperty(ReflectionReflectionMask,"Blend Mask");
+                            materialEditor.ShaderProperty(ReflectionNormalMix,"Normal Map mix");
+                            materialEditor.ShaderProperty(ReflectionShadeMix, "Shadow mix");
+                            materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap");
+                            materialEditor.ShaderProperty(ReflectionRoughness,"Roughness");
+                        } else {
+                            materialEditor.ShaderProperty(ReflectionReflectionPower,"Smoothness");
+                            materialEditor.ShaderProperty(ReflectionReflectionMask,"Smoothness Mask");
+                            materialEditor.ShaderProperty(ReflectionSuppressBaseColorValue,"Suppress Base Color");
+                        }
+                        EditorGUI.indentLevel--;
                     }
                     EditorGUI.indentLevel--;
                 }
