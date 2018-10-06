@@ -45,9 +45,6 @@ uniform float _OutlineTextureColorRate;
 uniform float _OutlineShadeMix;
 
 float4 frag(VertexOutput i) : COLOR {
-    float isFrontFace = ( i.is_backface == 1 ? 0 : 1 );
-    float faceSign = ( i.is_backface == 1 ? -1 : 1 );
-    float isOutline = ( i.is_outline == 1 ? 1 : 0 );
 
     i.normalDir = normalize(i.normalDir);
     float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
@@ -66,7 +63,7 @@ float4 frag(VertexOutput i) : COLOR {
     Diffuse = lerp(Diffuse, Diffuse * i.color,_VertexColorBlendDiffuse); // 頂点カラーを合成
 
     // アウトラインであればDiffuseとColorを混ぜる
-    Diffuse = lerp(Diffuse, (Diffuse * _OutlineTextureColorRate + i.col * (1 - _OutlineTextureColorRate)), isOutline);
+    Diffuse = lerp(Diffuse, (Diffuse * _OutlineTextureColorRate + i.col * (1 - _OutlineTextureColorRate)), i.isOutline);
 
     #ifdef ARKTOON_CUTOUT
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
@@ -85,15 +82,14 @@ float4 frag(VertexOutput i) : COLOR {
     float3 coloredLight = saturate(lightColor*finalLight*_PointAddIntensity);
     float3 ToonedMap = Diffuse * coloredLight;
 
-    // アウトラインであればShadeMixを反映
-    //ToonedMap = lerp(ToonedMap, (ToonedMap * _OutlineShadeMix + Diffuse * (1 - _OutlineShadeMix)), isOutline);
-
     float3 specular = float3(0,0,0);
     float3 shadowcap = float3(1000,1000,1000);
     float3 matcap = float3(0,0,0);
     float3 RimLight = float3(0,0,0);
 
-    if (!isOutline) {
+    #ifdef USE_OUTLINE
+    if (!i.isOutline) {
+    #endif
 
         #ifdef USE_GLOSS
             float _GlossBlendMask_var = tex2D(_GlossBlendMask, TRANSFORM_TEX(i.uv0, _GlossBlendMask));
@@ -153,7 +149,10 @@ float4 frag(VertexOutput i) : COLOR {
             RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )*pow(1.0-max(0,dot(normalDirection, viewDirection)),_RimFresnelPower)*_RimBlend*_RimColor.rgb*_RimBlendMask_var);
             RimLight = min(RimLight, RimLight * (coloredLight * _RimShadeMix));
         #endif
+
+    #ifdef USE_OUTLINE
     }
+    #endif
 
     float3 finalColor = max(ToonedMap, RimLight) + specular;
 
