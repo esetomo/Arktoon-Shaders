@@ -110,8 +110,8 @@ struct VertexOutput {
     float3 tangentDir : TEXCOORD4;
     float3 bitangentDir : TEXCOORD5;
     fixed4 col : COLOR0;
-	bool is_outline : IS_OUTLINE;
-    bool is_backface : IS_BACKFACE;
+	bool isOutline : IS_OUTLINE;
+    int faceSign : FACE_SIGN;
     SHADOW_COORDS(6)
     UNITY_FOG_COORDS(7)
     fixed4 color : COLOR1;
@@ -144,8 +144,8 @@ void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 		o.tangentDir = IN[i].tangentDir;
 		o.bitangentDir = IN[i].bitangentDir;
 		o.posWorld = mul(unity_ObjectToWorld, IN[i].vertex);
-		o.is_outline = true;
-        o.is_backface = false;
+		o.isOutline = true;
+        o.faceSign = -1;
 
 		// Pass-through the shadow coordinates if this pass has shadows.
 		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)
@@ -184,8 +184,8 @@ void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 		o.tangentDir = IN[iii].tangentDir;
 		o.bitangentDir = IN[iii].bitangentDir;
 		o.posWorld = mul(unity_ObjectToWorld, IN[iii].vertex);
-		o.is_outline = false;
-        o.is_backface = true;
+		o.isOutline = false;
+        o.faceSign = -1;
 
 		// Pass-through the shadow coordinates if this pass has shadows.
 		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)
@@ -223,8 +223,8 @@ void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 		o.tangentDir = IN[ii].tangentDir;
 		o.bitangentDir = IN[ii].bitangentDir;
 		o.posWorld = mul(unity_ObjectToWorld, IN[ii].vertex);
-		o.is_outline = false;
-        o.is_backface = false;
+		o.isOutline = false;
+        o.faceSign = 1;
 
 		// Pass-through the shadow coordinates if this pass has shadows.
 		#if defined (SHADOWS_SCREEN) || ( defined (SHADOWS_DEPTH) && defined (SPOT) ) || defined (SHADOWS_CUBE)

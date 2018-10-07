@@ -61,6 +61,8 @@ namespace ArktoonShaders
         MaterialProperty GlossColor;
         MaterialProperty UseOutline;
         MaterialProperty OutlineWidth;
+        MaterialProperty OutlineMask;
+        MaterialProperty OutlineCutoffRange;
         MaterialProperty OutlineColor;
         MaterialProperty OutlineShadeMix;
         MaterialProperty OutlineTextureColorRate;
@@ -174,6 +176,8 @@ namespace ArktoonShaders
             GlossColor = FindProperty("_GlossColor", props);
             UseOutline = FindProperty("_UseOutline", props);
             OutlineWidth = FindProperty("_OutlineWidth", props);
+            if(!isOpaque) OutlineMask = FindProperty("_OutlineMask", props);
+            if(!isOpaque) OutlineCutoffRange = FindProperty("_OutlineCutoffRange", props);
             OutlineColor = FindProperty("_OutlineColor", props);
             OutlineShadeMix = FindProperty("_OutlineShadeMix", props);
             OutlineTextureColorRate = FindProperty("_OutlineTextureColorRate", props);
@@ -344,6 +348,13 @@ namespace ArktoonShaders
                     if(useOutline > 0)
                     {
                         materialEditor.ShaderProperty(OutlineWidth,"Width");
+                        if(!isOpaque) {
+                            materialEditor.ShaderProperty(OutlineMask,"Cutoff Mask");
+                            materialEditor.ShaderProperty(OutlineCutoffRange,"Cutoff Range");
+                        }else{
+                            EditorGUILayout.LabelField("Cutoff Mask","Available in", EditorStyles.centeredGreyMiniLabel);
+                            EditorGUILayout.LabelField("Cutoff Range","AlphaCutout/Fade Shader", EditorStyles.centeredGreyMiniLabel);
+                        }
                         materialEditor.ShaderProperty(OutlineColor,"Color");
                         materialEditor.ShaderProperty(OutlineShadeMix,"Shadow mix");
                         materialEditor.ShaderProperty(OutlineTextureColorRate,"Base Color Mix");

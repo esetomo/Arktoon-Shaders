@@ -61,6 +61,8 @@ Shader "arktoon/AlphaCutout" {
         // Outline
         [Toggle(USE_OUTLINE)]_UseOutline ("[Outline] Enabled", Float) = 0
         _OutlineWidth ("[Outline] Width", Range(0, 10)) = 0.05
+        _OutlineMask ("[Outline] Outline Mask", 2D) = "white" {}
+        _OutlineCutoffRange ("[Outline] Cutoff Range", Range(0, 1)) = 0
         _OutlineColor ("[Outline] Color", Color) = (0,0,0,1)
         _OutlineShadeMix ("[Outline] Shade Mix", Range(0, 1)) = 0
         _OutlineTextureColorRate ("[Outline] Texture Color Rate", Range(0, 1)) = 0.05

@@ -64,14 +64,12 @@ uniform float _VertexColorBlendEmissive;
 uniform float _OtherShadowAdjust;
 uniform float _OtherShadowBorderSharpness;
 // uniform float4 _BackfaceColorMultiply;
+uniform sampler2D _OutlineMask; uniform float4 _OutlineMask_ST;
+uniform float _OutlineCutoffRange;
 uniform float _OutlineTextureColorRate;
 uniform float _OutlineShadeMix;
 
 float4 frag(VertexOutput i) : COLOR {
-    // float isBackFace = ( facing >= 0 ? 0 : 1 );
-    float isFrontFace = ( i.is_backface == 1 ? 0 : 1 );
-    float faceSign = ( i.is_backface == 1 ? -1 : 1 );
-    float isOutline = ( i.is_outline == 1 ? 1 : 0 );
 
     // i.normalDir = normalize(i.normalDir);
     float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
@@ -90,10 +88,17 @@ float4 frag(VertexOutput i) : COLOR {
     Diffuse = lerp(Diffuse, Diffuse * i.color,_VertexColorBlendDiffuse);
 
     // アウトラインであればDiffuseとColorを混ぜる
-    Diffuse = lerp(Diffuse, (Diffuse * _OutlineTextureColorRate + i.col * (1 - _OutlineTextureColorRate)), isOutline);
+    Diffuse = lerp(Diffuse, (Diffuse * _OutlineTextureColorRate + i.col * (1 - _OutlineTextureColorRate)), i.isOutline);
 
     #ifdef ARKTOON_CUTOUT
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
+    #endif
+
+    #if defined(ARKTOON_CUTOUT) || defined(ARKTOON_FADE)
+        if (i.isOutline) {
+            float _OutlineMask_var = tex2D(_OutlineMask,TRANSFORM_TEX(i.uv0, _OutlineMask)).r;
+            clip(_OutlineMask_var.r - _OutlineCutoffRange);
+        }
     #endif
 
     // 光源サンプリング方法
@@ -195,7 +200,7 @@ float4 frag(VertexOutput i) : COLOR {
     #endif
 
     // アウトラインであればShadeMixを反映
-    ToonedMap = lerp(ToonedMap, (ToonedMap * _OutlineShadeMix + (Diffuse+(Diffuse*coloredLight_sum)) * (1 - _OutlineShadeMix)), isOutline);
+    ToonedMap = lerp(ToonedMap, (ToonedMap * _OutlineShadeMix + (Diffuse+(Diffuse*coloredLight_sum)) * (1 - _OutlineShadeMix)), i.isOutline);
 
     float3 ReflectionMap = float3(0,0,0);
     float3 specular = float3(0,0,0);
@@ -203,7 +208,10 @@ float4 frag(VertexOutput i) : COLOR {
     float3 RimLight = float3(0,0,0);
     float3 shadowcap = float3(1000,1000,1000);
 
-    if (!isOutline) {
+    #ifdef USE_OUTLINE
+    if (!i.isOutline) {
+    #endif
+
         // オプション：ReflectionかGlossがオンならば
         #if defined(USE_REFLECTION) || defined(USE_GLOSS)
             float NdotV = abs(dot( normalDirection, viewDirection ));
@@ -286,7 +294,7 @@ float4 frag(VertexOutput i) : COLOR {
             float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
             float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
             RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )
-                            * pow(1.0-max(0,dot(normalDirection * faceSign, viewDirection)),_RimFresnelPower)
+                            * pow(1.0-max(0,dot(normalDirection * i.faceSign, viewDirection)),_RimFresnelPower)
                             * _RimBlend
                             * _RimColor.rgb
                             * _RimBlendMask_var
@@ -300,7 +308,10 @@ float4 frag(VertexOutput i) : COLOR {
             float4 _ShadowCapBlendMask_var = tex2D(_ShadowCapBlendMask,TRANSFORM_TEX(i.uv0, _ShadowCapBlendMask));
             shadowcap = (1.0 - ((1.0 - (_ShadowCapTexture_var.rgb))*_ShadowCapBlendMask_var.rgb)*_ShadowCapBlend);
         #endif
+
+    #ifdef USE_OUTLINE
     }
+    #endif
 
     float3 finalcolor2 = ToonedMap+ReflectionMap + specular;
 
@@ -327,7 +338,7 @@ float4 frag(VertexOutput i) : COLOR {
 
     // EmissiveColorはこのタイミングで合成
     float3 _Emission = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap)).rgb *_EmissionColor.rgb;
-    float3 emissive = max(lerp(_Emission.rgb, _Emission.rgb * i.color, _VertexColorBlendEmissive), RimLight) * !isOutline;
+    float3 emissive = max(lerp(_Emission.rgb, _Emission.rgb * i.color, _VertexColorBlendEmissive), RimLight) * !i.isOutline;
 
     float3 finalColor = emissive + finalcolor2;
 
