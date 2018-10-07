@@ -41,6 +41,8 @@ uniform float _ShadowCapNormalMix;
 
 uniform float _VertexColorBlendDiffuse;
 
+uniform sampler2D _OutlineMask; uniform float4 _OutlineMask_ST;
+uniform float _OutlineCutoffRange;
 uniform float _OutlineTextureColorRate;
 uniform float _OutlineShadeMix;
 
@@ -67,6 +69,13 @@ float4 frag(VertexOutput i) : COLOR {
 
     #ifdef ARKTOON_CUTOUT
         clip((_MainTex_var.a * _Color.a) - _CutoutCutoutAdjust);
+    #endif
+
+    #if defined(ARKTOON_CUTOUT) || defined(ARKTOON_FADE)
+        if (i.isOutline) {
+            float _OutlineMask_var = tex2D(_OutlineMask,TRANSFORM_TEX(i.uv0, _OutlineMask)).r;
+            clip(_OutlineMask_var.r - _OutlineCutoffRange);
+        }
     #endif
 
     float ShadowborderMin = max(0, _PointShadowborder - _PointShadowborderBlur/2);
