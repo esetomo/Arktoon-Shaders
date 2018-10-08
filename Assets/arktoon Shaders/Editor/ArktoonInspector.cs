@@ -16,6 +16,8 @@ namespace ArktoonShaders
 {
     public class ArktoonInspector : ShaderGUI
     {
+        string version = "0.9.1";
+
         #region MaterialProperties
         MaterialProperty BaseTexture;
         MaterialProperty BaseColor;
@@ -539,9 +541,10 @@ namespace ArktoonShaders
                         EditorGUI.indentLevel --;
                     }
                     EditorGUI.indentLevel --;
-
                     // materialEditor.ShaderProperty(BackfaceColorMultiply, "Backface Color Multiply (def:white)");
                 }
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                EditorGUILayout.LabelField("Arktoon-Shaders Ver." + version, EditorStyles.boldLabel);
             }
             EditorGUI.EndChangeCheck();
         }
