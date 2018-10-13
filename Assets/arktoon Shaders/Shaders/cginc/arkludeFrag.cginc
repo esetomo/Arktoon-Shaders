@@ -240,8 +240,7 @@ float4 frag(VertexOutput i) : COLOR {
                 #endif
                 indirectSpecular *= FresnelLerp (specularColorRefl, grazingTermRefl, NdotV);
                 indirectSpecular *= surfaceReduction;
-                float reflSuppress = _ReflectionSuppressBaseColorValue * _ReflectionSmoothnessMask_var; 
-                ToonedMap = lerp(ToonedMap,ToonedMap * (1-surfaceReduction), reflSuppress);
+                ToonedMap = lerp(ToonedMap,ToonedMap * (1-surfaceReduction), _ReflectionSuppressBaseColorValue);
                 ReflectionMap = indirectSpecular;
             #else
                 float3 normalDirectionReflection = normalize(mul( float3(normalLocal.r*_ReflectionNormalMix, normalLocal.g*_ReflectionNormalMix, normalLocal.b), tangentTransform )); // Perturbed normals
