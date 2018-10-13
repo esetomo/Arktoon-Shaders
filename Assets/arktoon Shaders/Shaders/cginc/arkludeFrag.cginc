@@ -243,7 +243,8 @@ float4 frag(VertexOutput i) : COLOR {
             #endif
             indirectSpecular *= FresnelLerp (specularColorRefl, grazingTermRefl, reflNdotV);
             indirectSpecular *= surfaceReduction *lerp(float3(1,1,1), finalLight,_ReflectionShadeMix);
-            ToonedMap = lerp(ToonedMap,ToonedMap * (1-surfaceReduction), _ReflectionSuppressBaseColorValue);
+            float reflSuppress = _ReflectionSuppressBaseColorValue * _ReflectionSmoothnessMask_var;
+            ToonedMap = lerp(ToonedMap,ToonedMap * (1-surfaceReduction), reflSuppress);
             ReflectionMap = indirectSpecular*lerp(float3(1,1,1), finalLight,_ReflectionShadeMix);
         #endif
         // オプション：Gloss
