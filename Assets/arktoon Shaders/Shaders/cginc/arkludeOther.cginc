@@ -69,3 +69,16 @@ float3 viewReflectDirection, float attenuation, float roughness, float3 worldPos
     float3 indirectSpecular = UnityGI_IndirectSpecular(d, 1.0h, ugls_en_data);
     return indirectSpecular;
 }
+
+float3 GetIndirectSpecularCubemap(samplerCUBE _ReflectionCubemap, half4 _ReflectionCubemap_HDR, float3 viewReflectDirection, float roughness){
+    half3 specular;
+    #ifdef _GLOSSYREFLECTIONS_OFF
+        specular = unity_IndirectSpecColor.rgb;
+    #else
+        half perceptualRoughness = roughness*(1.7 - 0.7*roughness);
+        half mip = perceptualRoughnessToMipmapLevel(perceptualRoughness);
+        half4 rgbm  = texCUBElod(_ReflectionCubemap,float4(viewReflectDirection,mip));
+        specular = DecodeHDR(rgbm, _ReflectionCubemap_HDR);
+    #endif
+    return specular;
+}

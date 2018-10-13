@@ -83,7 +83,6 @@ namespace ArktoonShaders
         MaterialProperty ReflectionNormalMix;
         MaterialProperty ReflectionShadeMix;
         MaterialProperty ReflectionCubemap;
-        MaterialProperty ReflectionRoughness;
         MaterialProperty ReflectionSuppressBaseColorValue;
         MaterialProperty UseRim;
         MaterialProperty RimBlend;
@@ -198,7 +197,6 @@ namespace ArktoonShaders
             ReflectionNormalMix = FindProperty("_ReflectionNormalMix", props);
             ReflectionShadeMix = FindProperty("_ReflectionShadeMix", props);
             ReflectionCubemap = FindProperty("_ReflectionCubemap", props);
-            ReflectionRoughness = FindProperty("_ReflectionRoughness", props);
             ReflectionSuppressBaseColorValue = FindProperty("_ReflectionSuppressBaseColorValue", props);
             UseRim = FindProperty("_UseRim", props);
             RimBlend = FindProperty("_RimBlend", props);
@@ -393,22 +391,16 @@ namespace ArktoonShaders
                     {
                         materialEditor.ShaderProperty(UseReflectionProbe,"Use Reflection Probe");
                         var useProbe = UseReflectionProbe.floatValue;
-
-                        EditorGUI.indentLevel++;
-                        if(useProbe <= 0)
-                        {
-                            materialEditor.ShaderProperty(ReflectionReflectionPower,"Blend");
-                            materialEditor.ShaderProperty(ReflectionReflectionMask,"Blend Mask");
-                            materialEditor.ShaderProperty(ReflectionNormalMix,"Normal Map mix");
-                            materialEditor.ShaderProperty(ReflectionShadeMix, "Shadow mix");
+                        materialEditor.ShaderProperty(ReflectionReflectionPower,"Smoothness");
+                        materialEditor.ShaderProperty(ReflectionReflectionMask,"Smoothness Mask");
+                        materialEditor.ShaderProperty(ReflectionNormalMix,"Normal Map mix");
+                        materialEditor.ShaderProperty(ReflectionShadeMix, "Shadow mix");
+                        materialEditor.ShaderProperty(ReflectionSuppressBaseColorValue,"Suppress Base Color");
+                        if(useProbe <= 0) {
                             materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap");
-                            materialEditor.ShaderProperty(ReflectionRoughness,"Roughness");
                         } else {
-                            materialEditor.ShaderProperty(ReflectionReflectionPower,"Smoothness");
-                            materialEditor.ShaderProperty(ReflectionReflectionMask,"Smoothness Mask");
-                            materialEditor.ShaderProperty(ReflectionSuppressBaseColorValue,"Suppress Base Color");
+                            materialEditor.ShaderProperty(ReflectionCubemap,"Cubemap(falllback)");
                         }
-                        EditorGUI.indentLevel--;
                     }
                     EditorGUI.indentLevel--;
                 }
