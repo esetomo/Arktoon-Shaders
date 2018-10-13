@@ -76,14 +76,13 @@ Shader "arktoon/Stencil/Reader/Fade" {
         _MatcapColor ("[MatCap] Color", Color) = (1,1,1,1)
         // Reflection
         [Toggle(USE_REFLECTION)]_UseReflection ("[Reflection] Enabled", Float) = 0
-        [Toggle(USE_REFLECTION_PROBE)]_UseReflectionProbe ("[Reflection] Use Reflection Probe", Float) = 0
+        [Toggle(USE_REFLECTION_PROBE)]_UseReflectionProbe ("[Reflection] Use Reflection Probe", Float) = 1
         _ReflectionReflectionPower ("[Reflection] Reflection Power", Range(0, 1)) = 1
         _ReflectionReflectionMask ("[Reflection] Reflection Mask", 2D) = "white" {}
         _ReflectionNormalMix ("[Reflection] Normal Map Mix", Range(0,2)) = 1
         _ReflectionShadeMix ("[Reflection] Shade Mix", Range(0, 1)) = 0
-        _ReflectionCubemap ("[Reflection] Cubemap", Cube) = "_Skybox" {}
-        _ReflectionRoughness ("[Reflection] Roughness", Range(0, 1)) = 0
-        _ReflectionSuppressBaseColorValue ("[Reflection] Suppress Base Color", Range(0, 1)) = 0.5
+        _ReflectionSuppressBaseColorValue ("[Reflection] Suppress Base Color", Range(0, 1)) = 1
+        _ReflectionCubemap ("[Reflection] Cubemap", Cube) = "" {}
         // Rim
         [Toggle(USE_RIM)]_UseRim ("[Rim] Enabled", Float) = 0
         _RimBlend ("[Rim] Blend", Range(0, 3)) = 1
