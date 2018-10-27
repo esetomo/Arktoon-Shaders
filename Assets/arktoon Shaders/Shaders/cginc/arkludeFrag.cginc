@@ -49,6 +49,7 @@ uniform half4  _ReflectionCubemap_HDR;
 uniform float _GlossBlend;
 uniform sampler2D _GlossBlendMask; uniform float4 _GlossBlendMask_ST;
 uniform float _RimFresnelPower;
+uniform float _RimUpperSideWidth;
 uniform float4 _RimColor;
 uniform fixed _RimUseBaseTexture;
 uniform float _RimBlend;
@@ -292,12 +293,17 @@ float4 frag(VertexOutput i) : COLOR {
         #ifdef USE_RIM
             float _RimBlendMask_var = tex2D(_RimBlendMask, TRANSFORM_TEX(i.uv0, _RimBlendMask));
             float4 _RimTexture_var = tex2D(_RimTexture,TRANSFORM_TEX(i.uv0, _RimTexture));
-            RimLight = (lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )
-                            * pow(1.0-max(0,dot(normalDirection * i.faceSign, viewDirection)),_RimFresnelPower)
+            RimLight = (
+                            lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )
+                            * pow(
+                                min(1.0, 1.0 - max(0, dot(normalDirection * i.faceSign, viewDirection) ) + _RimUpperSideWidth)
+                                , _RimFresnelPower
+                                )
                             * _RimBlend
                             * _RimColor.rgb
                             * _RimBlendMask_var
-                            * lerp(float3(1,1,1), finalLight,_RimShadeMix));
+                            * lerp(float3(1,1,1), finalLight,_RimShadeMix)
+                        );
         #endif
         // オプション:ShadeCap
         #ifdef USE_SHADOWCAP

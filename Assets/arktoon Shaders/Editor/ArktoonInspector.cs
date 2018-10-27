@@ -16,7 +16,7 @@ namespace ArktoonShaders
 {
     public class ArktoonInspector : ShaderGUI
     {
-        string version = "0.9.1";
+        string version = "0.9.3-exclusive";
 
         #region MaterialProperties
         MaterialProperty BaseTexture;
@@ -68,6 +68,8 @@ namespace ArktoonShaders
         MaterialProperty OutlineColor;
         MaterialProperty OutlineShadeMix;
         MaterialProperty OutlineTextureColorRate;
+        MaterialProperty UseOutlineWidthMask;
+        MaterialProperty OutlineWidthMask;
         MaterialProperty UseMatcap;
         MaterialProperty MatcapBlendMode;
         MaterialProperty MatcapBlend;
@@ -89,6 +91,7 @@ namespace ArktoonShaders
         MaterialProperty RimBlendMask;
         MaterialProperty RimShadeMix;
         MaterialProperty RimFresnelPower;
+        MaterialProperty RimUpperSideWidth;
         MaterialProperty RimColor;
         MaterialProperty RimTexture;
         MaterialProperty RimUseBaseTexture;
@@ -182,6 +185,8 @@ namespace ArktoonShaders
             OutlineColor = FindProperty("_OutlineColor", props);
             OutlineShadeMix = FindProperty("_OutlineShadeMix", props);
             OutlineTextureColorRate = FindProperty("_OutlineTextureColorRate", props);
+            UseOutlineWidthMask = FindProperty("_UseOutlineWidthMask", props);
+            OutlineWidthMask = FindProperty("_OutlineWidthMask", props);
             UseMatcap = FindProperty("_UseMatcap", props);
             MatcapBlendMode = FindProperty("_MatcapBlendMode", props);
             MatcapBlend = FindProperty("_MatcapBlend", props);
@@ -203,6 +208,7 @@ namespace ArktoonShaders
             RimBlendMask = FindProperty("_RimBlendMask", props);
             RimShadeMix = FindProperty("_RimShadeMix", props);
             RimFresnelPower = FindProperty("_RimFresnelPower", props);
+            RimUpperSideWidth = FindProperty("_RimUpperSideWidth", props);
             RimColor = FindProperty("_RimColor", props);
             RimTexture = FindProperty("_RimTexture", props);
             RimUseBaseTexture = FindProperty("_RimUseBaseTexture", props);
@@ -355,6 +361,10 @@ namespace ArktoonShaders
                             EditorGUILayout.LabelField("Cutoff Mask","Available in", EditorStyles.centeredGreyMiniLabel);
                             EditorGUILayout.LabelField("Cutoff Range","AlphaCutout/Fade Shader", EditorStyles.centeredGreyMiniLabel);
                         }
+                        materialEditor.ShaderProperty(UseOutlineWidthMask,"Use Width Mask");
+                        var useOutlineWidthMask = UseOutlineWidthMask.floatValue;
+                        if (useOutlineWidthMask > 0) materialEditor.ShaderProperty(OutlineWidthMask,"Width Mask");
+
                         materialEditor.ShaderProperty(OutlineColor,"Color");
                         materialEditor.ShaderProperty(OutlineShadeMix,"Shadow mix");
                         materialEditor.ShaderProperty(OutlineTextureColorRate,"Base Color Mix");
@@ -417,6 +427,7 @@ namespace ArktoonShaders
                         materialEditor.ShaderProperty(RimBlendMask,"Blend Mask");
                         materialEditor.ShaderProperty(RimShadeMix,"Shadow mix");
                         materialEditor.ShaderProperty(RimFresnelPower,"Fresnel Power");
+                        materialEditor.ShaderProperty(RimUpperSideWidth,"Upper side width");
                         materialEditor.ShaderProperty(RimUseBaseTexture,"Use Base Color");
                         materialEditor.ShaderProperty(RimColor,"Color");
                         materialEditor.ShaderProperty(RimTexture,"Texture");
