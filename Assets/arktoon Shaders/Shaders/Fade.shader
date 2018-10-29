@@ -65,6 +65,8 @@ Shader "arktoon/Fade" {
         _OutlineColor ("[Outline] Color", Color) = (0,0,0,1)
         _OutlineShadeMix ("[Outline] Shade Mix", Range(0, 1)) = 0
         _OutlineTextureColorRate ("[Outline] Texture Color Rate", Range(0, 1)) = 0.05
+        [Toggle(USE_OUTLINE_WIDTH_MASK)]_UseOutlineWidthMask ("[Outline] Use Width Mask", Float) = 0
+        _OutlineWidthMask ("[Outline] Outline Width Mask", 2D) = "white" {}
         // MatCap
         [Toggle(USE_MATCAP)]_UseMatcap ("[MatCap] Enabled", Float) = 0
         [KeywordEnum(Add, Lighten, Screen)] _MatcapBlendMode ("[MatCap] Blend Mode", Float) = 0
@@ -88,7 +90,8 @@ Shader "arktoon/Fade" {
         _RimBlend ("[Rim] Blend", Range(0, 3)) = 1
         _RimBlendMask ("[Rim] Blend Mask", 2D) = "white" {}
         _RimShadeMix("[Rim] Shade Mix", Range(0, 1)) = 0
-        _RimFresnelPower ("[Rim] Fresnel Power", Range(0, 10)) = 1
+        [PowerSlider(3.0)]_RimFresnelPower ("[Rim] Fresnel Power", Range(0, 200)) = 1
+        _RimUpperSideWidth("[Rim] Upper width", Range(0, 1)) = 0
         _RimColor ("[Rim] Color", Color) = (1,1,1,1)
         _RimTexture ("[Rim] Texture", 2D) = "white" {}
         [MaterialToggle] _RimUseBaseTexture ("[Rim] Use Base Texture", Float ) = 0
@@ -141,6 +144,7 @@ Shader "arktoon/Fade" {
             #pragma shader_feature USE_CUSTOM_SHADOW_TEXTURE_2ND
             #pragma shader_feature USE_VERTEX_LIGHT
             #pragma shader_feature USE_OUTLINE
+            #pragma shader_feature USE_OUTLINE_WIDTH_MASK
             #pragma shader_feature DOUBLE_SIDED
 
             #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
@@ -179,6 +183,7 @@ Shader "arktoon/Fade" {
             #pragma multi_compile _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
             #pragma shader_feature USE_OUTLINE
+            #pragma shader_feature USE_OUTLINE_WIDTH_MASK
             #pragma shader_feature DOUBLE_SIDED
 
             #pragma vertex vert

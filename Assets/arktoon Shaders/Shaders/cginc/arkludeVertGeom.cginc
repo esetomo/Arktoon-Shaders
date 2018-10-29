@@ -127,6 +127,7 @@ struct VertexOutput {
 
 uniform float _OutlineWidth;
 uniform float4 _OutlineColor;
+uniform sampler2D _OutlineWidthMask; uniform float4 _OutlineWidthMask_ST;
 
 [maxvertexcount(9)]
 void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
@@ -135,7 +136,13 @@ void geom(triangle v2g IN[3], inout TriangleStream<VertexOutput> tristream)
 	#ifdef USE_OUTLINE
 	for (int i = 2; i >= 0; i--)
 	{
-		o.pos = UnityObjectToClipPos(IN[i].vertex + normalize(IN[i].normal) * (_OutlineWidth * .01));
+        #ifdef USE_OUTLINE_WIDTH_MASK
+            float _OutlineWidthMask_var = tex2Dlod (_OutlineWidthMask,float4(IN[i].uv0, 0, 0));
+            float width = _OutlineWidth * _OutlineWidthMask_var;
+        #else
+            float width = _OutlineWidth;
+        #endif
+		o.pos = UnityObjectToClipPos(IN[i].vertex + normalize(IN[i].normal) * (width * .01));
 		o.uv0 = IN[i].uv0;
 		o.col = fixed4( _OutlineColor.r, _OutlineColor.g, _OutlineColor.b, 1);
         o.color = IN[i].color;
