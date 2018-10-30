@@ -482,7 +482,7 @@ namespace ArktoonShaders
                 EditorGUILayout.HelpBox("These are some shade tweaking. no need to change usually." + Environment.NewLine + "ほとんどのケースで触る必要のないやつら。",MessageType.Info);
                 if (GUILayout.Button("Revert advanced params.")){
                     PointAddIntensity.floatValue = 1f;
-                    PointShadowStrength.floatValue = 1f;
+                    PointShadowStrength.floatValue = 0.5f;
                     PointShadowborder.floatValue = 0.5f;
                     PointShadowborderBlur.floatValue = 0.01f;
                     OtherShadowAdjust.floatValue = -0.1f;
@@ -524,7 +524,7 @@ namespace ArktoonShaders
                     {
                         EditorGUI.indentLevel ++;
                         materialEditor.ShaderProperty(PointAddIntensity, "Intensity (def:1)");
-                        materialEditor.ShaderProperty(PointShadowStrength, "Shadow Strength (def:1)");
+                        materialEditor.ShaderProperty(PointShadowStrength, "Shadow Strength (def:0.5)");
                         materialEditor.ShaderProperty(PointShadowborder, "Shadow Border (def:0.5)");
                         materialEditor.ShaderProperty(PointShadowborderBlur, "Shadow Border blur (def:0.01)");
                         materialEditor.ShaderProperty(PointShadowUseStep, "Use Shadow Steps");
