@@ -16,7 +16,7 @@ namespace ArktoonShaders
 {
     public class ArktoonInspector : ShaderGUI
     {
-        string version = "0.9.3";
+        string version = "0.9.3.1";
 
         #region MaterialProperties
         MaterialProperty BaseTexture;
