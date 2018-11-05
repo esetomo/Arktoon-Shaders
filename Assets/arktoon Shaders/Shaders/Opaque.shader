@@ -8,6 +8,7 @@ Shader "arktoon/Opaque" {
     Properties {
         // Double Sided
         [Toggle(DOUBLE_SIDED)]_UseDoubleSided ("Double Sided", Float ) = 0
+        [Toggle(FLIP_BACKFACE_NORMAL)]_DoubleSidedFlipBackfaceNormal ("Flip backface normal", Float ) = 0
         // Common
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
         _Color ("[Common] Base Color", Color) = (1,1,1,1)
@@ -142,6 +143,7 @@ Shader "arktoon/Opaque" {
             #pragma shader_feature USE_OUTLINE
             #pragma shader_feature USE_OUTLINE_WIDTH_MASK
             #pragma shader_feature DOUBLE_SIDED
+            #pragma shader_feature FLIP_BACKFACE_NORMAL
 
             #pragma multi_compile _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
@@ -177,6 +179,7 @@ Shader "arktoon/Opaque" {
             #pragma shader_feature USE_OUTLINE
             #pragma shader_feature USE_OUTLINE_WIDTH_MASK
             #pragma shader_feature DOUBLE_SIDED
+            #pragma shader_feature FLIP_BACKFACE_NORMAL
             #pragma multi_compile _MATCAPBLENDMODE_LIGHTEN _MATCAPBLENDMODE_ADD _MATCAPBLENDMODE_SCREEN
             #pragma multi_compile _SHADOWCAPBLENDMODE_DARKEN _SHADOWCAPBLENDMODE_MULTIPLY
 

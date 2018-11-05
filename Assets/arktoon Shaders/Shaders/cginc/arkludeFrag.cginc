@@ -75,7 +75,11 @@ uniform float _OutlineShadeMix;
 float4 frag(VertexOutput i) : COLOR {
 
     // i.normalDir = normalize(i.normalDir);
-    float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
+    #ifdef FLIP_BACKFACE_NORMAL
+        float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir * i.faceSign);
+    #else
+        float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
+    #endif
     float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
     float3 _BumpMap_var = UnpackScaleNormal(tex2D(_BumpMap,TRANSFORM_TEX(i.uv0, _BumpMap)), _BumpScale);
     float3 normalLocal = _BumpMap_var.rgb;
@@ -296,7 +300,11 @@ float4 frag(VertexOutput i) : COLOR {
             RimLight = (
                             lerp( _RimTexture_var.rgb, Diffuse, _RimUseBaseTexture )
                             * pow(
-                                min(1.0, 1.0 - max(0, dot(normalDirection * i.faceSign, viewDirection) ) + _RimUpperSideWidth)
+                                #ifdef FLIP_BACKFACE_NORMAL
+                                    min(1.0, 1.0 - max(0, dot(normalDirection, viewDirection) ) + _RimUpperSideWidth)
+                                #else
+                                    min(1.0, 1.0 - max(0, dot(normalDirection * i.faceSign, viewDirection) ) + _RimUpperSideWidth)
+                                #endif
                                 , _RimFresnelPower
                                 )
                             * _RimBlend
