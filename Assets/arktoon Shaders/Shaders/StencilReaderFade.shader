@@ -9,6 +9,7 @@ Shader "arktoon/Stencil/Reader/Fade" {
         // Double Sided
         [Toggle(DOUBLE_SIDED)]_UseDoubleSided ("Double Sided", Float ) = 0
         [Toggle(FLIP_BACKFACE_NORMAL)]_DoubleSidedFlipBackfaceNormal ("Flip backface normal", Float ) = 0
+        [KeywordEnum(None, Front, Back)]_ShadowCasterCulling("[hidden] Shadow Caster Culling", Int) = 2 // Default Back
         [Enum(Off, 0, On, 1)]_ZWrite("ZWrite", Float) = 0
         // Common
         _MainTex ("[Common] Base Texture", 2D) = "white" {}
@@ -225,6 +226,7 @@ Shader "arktoon/Stencil/Reader/Fade" {
 			Tags { "LightMode" = "ShadowCaster" }
 
 			ZWrite On ZTest LEqual
+            Cull [_ShadowCasterCulling]
 
 			CGPROGRAM
 			#pragma target 3.0

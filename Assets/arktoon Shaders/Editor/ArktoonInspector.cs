@@ -107,6 +107,7 @@ namespace ArktoonShaders
         MaterialProperty StencilMaskAdjust;
         MaterialProperty UseDoubleSided;
         MaterialProperty DoubleSidedFlipBackfaceNormal;
+        MaterialProperty ShadowCasterCulling;
         MaterialProperty ZWrite;
         MaterialProperty VertexColorBlendDiffuse;
         MaterialProperty VertexColorBlendEmissive;
@@ -226,6 +227,7 @@ namespace ArktoonShaders
             // Cull = FindProperty("_Cull", props);
             UseDoubleSided = FindProperty("_UseDoubleSided", props);
             DoubleSidedFlipBackfaceNormal = FindProperty("_DoubleSidedFlipBackfaceNormal", props);
+            ShadowCasterCulling = FindProperty("_ShadowCasterCulling", props);
             VertexColorBlendDiffuse = FindProperty("_VertexColorBlendDiffuse", props);
             VertexColorBlendEmissive = FindProperty("_VertexColorBlendEmissive", props);
             OtherShadowBorderSharpness = FindProperty("_OtherShadowBorderSharpness", props);
@@ -249,9 +251,12 @@ namespace ArktoonShaders
                     materialEditor.ShaderProperty(UseDoubleSided, "Is Double Sided");
                     var doublesided = UseDoubleSided.floatValue;
                     if(doublesided > 0){
+                        ShadowCasterCulling.floatValue = 0;
                         EditorGUI.indentLevel ++;
                         materialEditor.ShaderProperty(DoubleSidedFlipBackfaceNormal, "Flip backside normal");
                         EditorGUI.indentLevel --;
+                    } else {
+                        ShadowCasterCulling.floatValue = 2;
                     }
                     if(isFade) materialEditor.ShaderProperty(ZWrite, "ZWrite");
                     EditorGUI.indentLevel --;
